@@ -1,0 +1,39 @@
+[molarity]
+expression = "moles / volume_liters"
+description = "Molarity calculation (mol/L)"
+category = "chemistry"
+
+[moles_from_mass]
+expression = "mass / molar_mass"
+description = "Calculate moles from mass"
+category = "chemistry"
+
+[mass_from_moles]
+expression = "moles * molar_mass"
+description = "Calculate mass from moles"
+category = "chemistry"
+
+[dilution_concentration]
+expression = "initial_concentration * initial_volume / final_volume"
+description = "Final concentration after dilution"
+category = "chemistry"
+
+[percent_yield]
+expression = "(actual_yield / theoretical_yield) * 100"
+description = "Percent yield of reaction"
+category = "chemistry"
+
+[percent_composition]
+expression = "(element_mass / compound_mass) * 100"
+description = "Percent composition by mass"
+category = "chemistry"
+
+[ideal_gas_pressure]
+expression = "moles * 8.314 * temperature / volume"
+description = "Pressure from ideal gas law (P = nRT/V)"
+category = "chemistry"
+
+[ideal_gas_volume]
+expression = "moles * 8.314 * temperature / pressure"
+description = "Volume from ideal gas law (V = nRT/P)"
+category = "chemistry"

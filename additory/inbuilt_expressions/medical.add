@@ -1,0 +1,74 @@
+[heart_rate_max]
+expression = "220 - age"
+description = "Maximum heart rate (simple formula)"
+category = "medical"
+
+[heart_rate_reserve]
+expression = "heart_rate_max - resting_heart_rate"
+description = "Heart rate reserve"
+category = "medical"
+
+[target_heart_rate_low]
+expression = "((heart_rate_max - resting_heart_rate) * 0.5) + resting_heart_rate"
+description = "Target heart rate (50% intensity)"
+category = "medical"
+
+[target_heart_rate_high]
+expression = "((heart_rate_max - resting_heart_rate) * 0.85) + resting_heart_rate"
+description = "Target heart rate (85% intensity)"
+category = "medical"
+
+[bmi_category]
+expression = "if_else(bmi < 18.5, 'underweight', if_else(bmi < 25, 'normal', if_else(bmi < 30, 'overweight', 'obese')))"
+description = "BMI category classification"
+category = "medical"
+
+[ideal_body_weight_male]
+expression = "50 + 0.91 * (height - 152.4)"
+description = "Ideal body weight for males (Devine formula) - height in cm"
+category = "medical"
+
+[ideal_body_weight_female]
+expression = "45.5 + 0.91 * (height - 152.4)"
+description = "Ideal body weight for females (Devine formula) - height in cm"
+category = "medical"
+
+[creatinine_clearance]
+expression = "((140 - age) * weight) / (72 * serum_creatinine)"
+description = "Creatinine clearance (Cockcroft-Gault) - male"
+category = "medical"
+
+[map]
+expression = "(systolic + 2 * diastolic) / 3"
+description = "Mean Arterial Pressure"
+category = "medical"
+
+[pulse_pressure]
+expression = "systolic - diastolic"
+description = "Pulse pressure"
+category = "medical"
+
+[bsa_dubois]
+expression = "0.007184 * (height ** 0.725) * (weight ** 0.425)"
+description = "Body Surface Area (DuBois formula) - height in cm, weight in kg"
+category = "medical"
+
+[bsa_haycock]
+expression = "0.024265 * (height ** 0.3964) * (weight ** 0.5378)"
+description = "Body Surface Area (Haycock formula) - height in cm, weight in kg"
+category = "medical"
+
+[bmr_male]
+expression = "10 * weight + 6.25 * height - 5 * age + 5"
+description = "Basal Metabolic Rate for males (Mifflin-St Jeor) - weight in kg, height in cm"
+category = "medical"
+
+[bmr_female]
+expression = "10 * weight + 6.25 * height - 5 * age - 161"
+description = "Basal Metabolic Rate for females (Mifflin-St Jeor) - weight in kg, height in cm"
+category = "medical"
+
+[waist_to_hip_ratio]
+expression = "waist_circumference / hip_circumference"
+description = "Waist-to-hip ratio (health risk indicator)"
+category = "medical"

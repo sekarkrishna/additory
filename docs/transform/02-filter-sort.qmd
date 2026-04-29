@@ -1,0 +1,379 @@
+---
+title: "add.transform() - Filter & Sort"
+---
+
+## Overview
+
+Learn how to filter rows and sort data using `add.transform()`. These are essential operations for data cleaning and analysis.
+
+**What you'll learn:**
+- How to filter rows based on conditions
+- How to sort data in ascending or descending order
+- How to combine filtering and sorting
+- Best practices for data selection
+
+**Prerequisites:**
+- [Calculations](examples-transform-01-calc.html) - Understanding of basic transform operations
+- Basic understanding of comparison operators
+
+---
+
+## Example 1: Filter Rows
+
+**Business Context:** You have a product inventory and need to see only products that are currently in stock (stock > 0).
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Product inventory
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey', 'Thingamajig'],
+    'price': [29.99, 49.99, 19.99, 39.99],
+    'stock': [10, 5, 0, 15]
+})
+
+# Filter products in stock
+result = add.transform(
+    '@filter',
+    df,
+    columns=['product', 'price', 'stock'],
+    where='stock > 0'
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@filter', df, ['product', 'price', 'stock'], where='stock > 0')
+
+print(result)
+```
+
+**Output:**
+```
+       product  price  stock
+0       Widget  29.99     10
+1       Gadget  49.99      5
+2  Thingamajig  39.99     15
+```
+
+**Explanation:**
+- `'@filter'` mode removes rows that don't match the condition
+- `columns` specifies which columns to keep in the result
+- `where` defines the filter condition
+- Doohickey (stock = 0) is filtered out
+- Only 3 products remain (stock > 0)
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 2: Sort Rows
+
+**Business Context:** You want to see your products ranked by sales performance, with the best-selling products first.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Product sales data
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey'],
+    'price': [29.99, 49.99, 19.99],
+    'sales': [100, 150, 75]
+})
+
+# Sort by sales descending (highest first)
+result = add.transform(
+    '@sort',
+    df,
+    columns=['product', 'price', 'sales'],
+    by='sales',
+    order='desc'
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@sort', df, ['product', 'price', 'sales'], by='sales', order='desc')
+
+print(result)
+```
+
+**Output:**
+```
+      product  price  sales
+0      Gadget  49.99    150
+1      Widget  29.99    100
+2  Doohickey  19.99     75
+```
+
+**Explanation:**
+- `'@sort'` mode reorders rows
+- `columns` specifies which columns to include
+- `by` specifies the column to sort by
+- `order='desc'` sorts from highest to lowest
+- Gadget (150 sales) is now first
+- Use `order='asc'` for ascending (lowest to highest)
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 3: Filter and Sort Combined
+
+**Business Context:** You want to see in-stock products sorted by price, from cheapest to most expensive.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Product inventory
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey', 'Thingamajig'],
+    'price': [29.99, 49.99, 19.99, 39.99],
+    'stock': [10, 5, 0, 15]
+})
+
+# Step 1: Filter in-stock products
+result = add.transform(
+    '@filter',
+    df,
+    columns=['product', 'price', 'stock'],
+    where='stock > 0'
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@filter', df, ['product', 'price', 'stock'], where='stock > 0')
+
+print("After filtering:")
+print(result)
+
+# Step 2: Sort by price ascending
+result = add.transform(
+    '@sort',
+    result,
+    columns=['product', 'price', 'stock'],
+    by='price',
+    order='asc'
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@sort', result, ['product', 'price', 'stock'], by='price', order='asc')
+
+print("\nAfter sorting:")
+print(result)
+```
+
+**Output:**
+```
+After filtering:
+       product  price  stock
+0       Widget  29.99     10
+1       Gadget  49.99      5
+2  Thingamajig  39.99     15
+
+After sorting:
+       product  price  stock
+0       Widget  29.99     10
+1  Thingamajig  39.99     15
+2       Gadget  49.99      5
+```
+
+**Explanation:**
+- First operation filters out Doohickey (stock = 0)
+- Second operation sorts the remaining products by price
+- Widget (29.99) is cheapest, so it's first
+- Gadget (49.99) is most expensive, so it's last
+- Chain operations by using the result of one as input to the next
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Filter Conditions
+
+### Comparison Operators
+
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `>` | Greater than | `where='price > 100'` |
+| `<` | Less than | `where='stock < 10'` |
+| `>=` | Greater than or equal | `where='age >= 18'` |
+| `<=` | Less than or equal | `where='quantity <= 5'` |
+| `==` | Equal to | `where='status == 1'` |
+| `!=` | Not equal to | `where='category != 0'` |
+
+### Filter Examples
+
+```python
+# Greater than
+where='price > 50'
+
+# Less than or equal
+where='stock <= 10'
+
+# Equal to
+where='category == 1'
+
+# Not equal
+where='status != 0'
+```
+
+### Important Notes
+
+- Currently, only simple comparisons are supported
+- Complex conditions (AND, OR) are not yet supported
+- For multiple conditions, chain multiple @filter operations
+- Column names must match exactly (case-sensitive)
+
+---
+
+## Sort Options
+
+### Sort Order
+
+```python
+# Ascending (lowest to highest)
+order='asc'
+
+# Descending (highest to lowest)
+order='desc'
+```
+
+### Sort by Multiple Columns
+
+```python
+# Sort by category, then by price within each category
+result = add.transform('@sort', df, 
+                       columns=['category', 'price', 'name'],
+                       by=['category', 'price'],
+                       order='asc')
+```
+
+**Note:** When sorting by multiple columns, all columns use the same order (asc or desc).
+
+---
+
+## Common Patterns
+
+### Pattern 1: Filter Out Zeros
+```python
+result = add.transform('@filter', df, columns=['col1', 'col2'], 
+                       where='value > 0')
+```
+
+### Pattern 2: Top N by Sorting
+```python
+# Sort descending and take top rows with pandas
+result = add.transform('@sort', df, columns=['name', 'score'], 
+                       by='score', order='desc')
+top_10 = result.head(10)
+```
+
+### Pattern 3: Filter Then Sort
+```python
+# Step 1: Filter
+df = add.transform('@filter', df, columns=['a', 'b'], where='a > 0')
+# Step 2: Sort
+df = add.transform('@sort', df, columns=['a', 'b'], by='b', order='desc')
+```
+
+### Pattern 4: Sort Then Filter
+```python
+# Step 1: Sort
+df = add.transform('@sort', df, columns=['date', 'amount'], 
+                   by='date', order='desc')
+# Step 2: Filter recent
+df = add.transform('@filter', df, columns=['date', 'amount'], 
+                   where='date > 20240101')
+```
+
+---
+
+## Best Practices
+
+1. **Specify columns explicitly**: Always list the columns you want to keep
+   ```python
+   # Good
+   columns=['product', 'price', 'stock']
+   
+   # Avoid relying on defaults
+   ```
+
+2. **Filter before sorting**: More efficient to sort fewer rows
+   ```python
+   # Good: Filter first (reduces data), then sort
+   df = add.transform('@filter', df, columns=cols, where='active == 1')
+   df = add.transform('@sort', df, columns=cols, by='date', order='desc')
+   ```
+
+3. **Use meaningful conditions**: Make your filters clear and maintainable
+   ```python
+   # Good
+   where='stock > 0'  # Clear intent
+   
+   # Less clear
+   where='stock != 0'  # Could include negative values
+   ```
+
+4. **Check your data types**: Ensure columns used in conditions are numeric
+   ```python
+   # If 'price' is stored as string, convert first
+   df['price'] = df['price'].astype(float)
+   ```
+
+5. **Chain operations logically**: Think about the order of operations
+   ```python
+   # Logical flow: filter → sort → limit
+   df = add.transform('@filter', df, columns=cols, where='valid == 1')
+   df = add.transform('@sort', df, columns=cols, by='score', order='desc')
+   top_results = df.head(100)
+   ```
+
+---
+
+## Key Takeaways
+
+- Use `@filter` to remove rows based on conditions
+- Use `@sort` to reorder rows
+- `columns` parameter specifies which columns to keep
+- `where` parameter defines filter conditions
+- `by` parameter specifies sort column(s)
+- `order` parameter controls sort direction ('asc' or 'desc')
+- Chain operations for complex workflows
+- Filter before sorting for better performance
+
+---
+
+## Common Questions
+
+**Q: Can I use AND/OR in filter conditions?**  
+A: Not currently. Chain multiple `@filter` operations instead.
+
+**Q: Can I sort by one column ascending and another descending?**  
+A: Not in a single operation. Sort by one column, then by the other in separate operations.
+
+**Q: What happens if the filter condition matches no rows?**  
+A: You'll get an empty DataFrame with the specified columns.
+
+**Q: Can I filter on multiple columns at once?**  
+A: Not in a single condition. Apply multiple `@filter` operations sequentially.
+
+**Q: Does sorting preserve the original DataFrame?**  
+A: No, `add.transform()` returns a new DataFrame. The original is unchanged.
+
+---
+
+## Next Steps
+
+- **[Aggregation](examples-transform-03-aggregate.html)** - Learn to group and aggregate data
+- **[Calculations](examples-transform-01-calc.html)** - Review calculation operations
+- **[API Reference](reference-transform.html)** - Complete `add.transform()` documentation
+
+---
+
+**Version:** 0.1.3  
+**Last Updated:** March 9, 2026

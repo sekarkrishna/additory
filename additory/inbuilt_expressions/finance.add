@@ -1,0 +1,49 @@
+[roi]
+expression = "((revenue - cost) / cost) * 100"
+description = "Return on Investment percentage"
+category = "finance"
+
+[profit_margin]
+expression = "((revenue - cost) / revenue) * 100"
+description = "Profit margin percentage"
+category = "finance"
+
+[gross_profit]
+expression = "revenue - cost_of_goods_sold"
+description = "Gross profit calculation"
+category = "finance"
+
+[net_profit]
+expression = "revenue - total_expenses"
+description = "Net profit calculation"
+category = "finance"
+
+[break_even]
+expression = "fixed_costs / (price - variable_cost)"
+description = "Break-even point in units"
+category = "finance"
+
+[markup]
+expression = "((selling_price - cost) / cost) * 100"
+description = "Markup percentage"
+category = "finance"
+
+[compound_interest]
+expression = "principal * ((1 + rate) ** periods)"
+description = "Compound interest calculation"
+category = "finance"
+
+[simple_interest]
+expression = "principal * rate * time"
+description = "Simple interest calculation"
+category = "finance"
+
+[debt_to_equity]
+expression = "total_debt / total_equity"
+description = "Debt-to-equity ratio"
+category = "finance"
+
+[current_ratio]
+expression = "current_assets / current_liabilities"
+description = "Current ratio (liquidity measure)"
+category = "finance"

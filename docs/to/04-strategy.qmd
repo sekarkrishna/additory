@@ -1,0 +1,400 @@
+---
+title: "add.to() - Aggregation Strategies"
+---
+
+## Overview
+
+Learn how to control what happens when multiple rows match during a lookup. The `strategy` parameter lets you aggregate, select, or combine matching values in powerful ways.
+
+**What you'll learn:**
+- How to use aggregation strategies (sum, mean, count, etc.)
+- How to select specific matches (first, last)
+- How to control column positioning with the `position` parameter
+- How to use different join types with `join_type`
+
+**Prerequisites:**
+- [One-to-Many & Many-to-One Patterns](examples-to-03-patterns.html) - Understanding of multiple matches
+- [Multiple Columns & Keys](examples-to-02-multiple.html) - Working with multiple columns
+
+---
+
+## Example 1: Aggregation Strategies (Sum, Mean, Count)
+
+**Business Context:** You have a customer list and multiple orders per customer. You need to calculate total revenue (sum), average order value (mean), and number of orders (count) for each customer.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Customers
+customers = pd.DataFrame({
+    'customer_id': [1, 2, 3],
+    'name': ['Alice', 'Bob', 'Charlie']
+})
+
+# Orders (multiple per customer)
+orders = pd.DataFrame({
+    'customer_id': [1, 1, 1, 2, 2, 3],
+    'amount': [100, 150, 200, 300, 250, 175]
+})
+
+# Sum: Total revenue per customer
+result_sum = add.to(
+    customers,
+    bring_from=orders,
+    bring='amount',
+    against='customer_id',
+    strategy={'amount': 'sum'}
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result_sum = add.to(customers, orders, 'amount', 'customer_id', strategy={'amount': 'sum'})
+
+print("Total Revenue:")
+print(result_sum)
+
+# Mean: Average order value per customer
+result_mean = add.to(
+    customers,
+    bring_from=orders,
+    bring='amount',
+    against='customer_id',
+    strategy={'amount': 'mean'}
+)
+
+print("\nAverage Order Value:")
+print(result_mean)
+
+# Count: Number of orders per customer
+result_count = add.to(
+    customers,
+    bring_from=orders,
+    bring='amount',
+    against='customer_id',
+    strategy={'amount': 'count'}
+)
+
+print("\nOrder Count:")
+print(result_count)
+```
+
+**Output:**
+```
+Total Revenue:
+   customer_id     name  amount
+0            1    Alice     450
+1            2      Bob     550
+2            3  Charlie     175
+
+Average Order Value:
+   customer_id     name  amount
+0            1    Alice     150.0
+1            2      Bob     275.0
+2            3  Charlie     175.0
+
+Order Count:
+   customer_id     name  amount
+0            1    Alice       3
+1            2      Bob       2
+2            3  Charlie       1
+```
+
+**Explanation:**
+- `strategy={'amount': 'sum'}` adds up all matching values
+- Alice has 3 orders: 100 + 150 + 200 = 450
+- `strategy={'amount': 'mean'}` calculates the average
+- Alice's average: (100 + 150 + 200) / 3 = 150
+- `strategy={'amount': 'count'}` counts the number of matches
+- Alice has 3 matching orders
+- The strategy is specified as a dictionary: `{column_name: strategy_type}`
+
+**Available Strategies:**
+- `'sum'` - Add all values
+- `'mean'` - Calculate average
+- `'count'` - Count number of matches
+- `'min'` - Take minimum value
+- `'max'` - Take maximum value
+- `'first'` - Take first match (see Example 2)
+- `'last'` - Take last match (see Example 2)
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 2: First and Last Strategies
+
+**Business Context:** You have a product catalog and a price history table. You need to show both the original price (first) and the current price (last) for each product.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Products
+products = pd.DataFrame({
+    'product_id': [101, 102, 103],
+    'name': ['Widget', 'Gadget', 'Doohickey']
+})
+
+# Price history (multiple prices per product over time)
+price_history = pd.DataFrame({
+    'product_id': [101, 101, 101, 102, 102, 103],
+    'date': ['2024-01-01', '2024-02-01', '2024-03-01', 
+             '2024-01-01', '2024-02-01', '2024-01-01'],
+    'price': [29.99, 34.99, 39.99, 49.99, 54.99, 19.99]
+})
+
+# Get first price (original/oldest)
+result_first = add.to(
+    products,
+    bring_from=price_history,
+    bring='price',
+    against='product_id',
+    strategy={'price': 'first'}
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result_first = add.to(products, price_history, 'price', 'product_id', strategy={'price': 'first'})
+
+print("Original Prices:")
+print(result_first)
+
+# Get last price (current/newest)
+result_last = add.to(
+    products,
+    bring_from=price_history,
+    bring='price',
+    against='product_id',
+    strategy={'price': 'last'}
+)
+
+print("\nCurrent Prices:")
+print(result_last)
+```
+
+**Output:**
+```
+Original Prices:
+   product_id       name  price
+0         101     Widget  29.99
+1         102     Gadget  49.99
+2         103  Doohickey  19.99
+
+Current Prices:
+   product_id       name  price
+0         101     Widget  39.99
+1         102     Gadget  54.99
+2         103  Doohickey  19.99
+```
+
+**Explanation:**
+- `strategy={'price': 'first'}` takes the first matching row
+- Widget (101) has 3 prices: 29.99 (first), 34.99, 39.99
+- First strategy returns 29.99
+- `strategy={'price': 'last'}` takes the last matching row
+- Last strategy returns 39.99
+- Order matters! The order in the reference DataFrame determines first/last
+- Doohickey (103) has only one price, so first and last are the same
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 3: Position and Join Type Parameters
+
+**Business Context:** You have an employee list and a skills table. You want to control where the skill column appears and handle employees without skills differently.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Employees
+employees = pd.DataFrame({
+    'emp_id': [1, 2, 3],
+    'name': ['Alice', 'Bob', 'Charlie']
+})
+
+# Skills (not all employees have skills listed)
+skills = pd.DataFrame({
+    'emp_id': [1, 2, 4],  # Note: emp_id 4 doesn't exist in employees
+    'skill': ['Python', 'Java', 'JavaScript']
+})
+
+# Left join (default) - keeps all employees
+result_left = add.to(
+    employees,
+    bring_from=skills,
+    bring='skill',
+    against='emp_id',
+    join_type='left'
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result_left = add.to(employees, skills, 'skill', 'emp_id', join_type='left')
+
+print("Left Join (all employees):")
+print(result_left)
+
+# Inner join - only matching employees
+result_inner = add.to(
+    employees,
+    bring_from=skills,
+    bring='skill',
+    against='emp_id',
+    join_type='inner'
+)
+
+print("\nInner Join (only employees with skills):")
+print(result_inner)
+
+# Position parameter - control column placement
+result_position = add.to(
+    employees,
+    bring_from=skills,
+    bring='skill',
+    against='emp_id',
+    position=1  # Insert after first column (0-indexed)
+)
+
+print("\nWith Position Control:")
+print(result_position)
+```
+
+**Output:**
+```
+Left Join (all employees):
+   emp_id     name    skill
+0       1    Alice   Python
+1       2      Bob     Java
+2       3  Charlie      NaN
+
+Inner Join (only employees with skills):
+   emp_id   name   skill
+0       1  Alice  Python
+1       2    Bob    Java
+
+With Position Control:
+   emp_id    skill     name
+0       1   Python    Alice
+1       2     Java      Bob
+2       3      NaN  Charlie
+```
+
+**Explanation:**
+- `join_type='left'` (default) keeps all rows from the target DataFrame
+- Charlie (emp_id 3) has no skill, so gets NaN
+- `join_type='inner'` only keeps rows that match in both DataFrames
+- Charlie is excluded because he has no skill
+- `position=1` inserts the new column at index 1 (after emp_id)
+- Without position, new columns are added at the end
+- Position is 0-indexed: 0 = first column, 1 = second column, etc.
+
+**Available Join Types:**
+- `'left'` (default) - Keep all target rows, add NaN for non-matches
+- `'inner'` - Only keep rows that match in both DataFrames
+- `'right'` - Keep all reference rows (rarely used)
+- `'outer'` - Keep all rows from both DataFrames (rarely used)
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Strategy Dictionary Format
+
+### Single Column Strategy
+```python
+strategy={'amount': 'sum'}
+```
+
+### Multiple Column Strategies
+```python
+strategy={
+    'amount': 'sum',
+    'quantity': 'count',
+    'price': 'mean'
+}
+```
+
+### When Strategy is Required
+
+You MUST provide a strategy when:
+- Using one-to-many pattern (single target, multiple references)
+- Using many-to-many pattern (multiple targets, multiple references)
+- Any situation where multiple rows might match
+
+You DON'T need a strategy when:
+- Each key has exactly one match
+- Using basic one-to-one lookups
+
+---
+
+## Combining Parameters
+
+You can combine multiple parameters for powerful control:
+
+```python
+result = add.to(
+    employees,
+    bring_from=orders,
+    bring=['amount', 'quantity'],
+    against='emp_id',
+    strategy={
+        'amount': 'sum',
+        'quantity': 'count'
+    },
+    join_type='left',
+    position=2
+)
+```
+
+This example:
+- Brings two columns
+- Sums the amount column
+- Counts the quantity column
+- Keeps all employees (left join)
+- Inserts new columns at position 2
+
+---
+
+## Key Takeaways
+
+- Use `strategy` parameter to control how multiple matches are handled
+- Common strategies: sum, mean, count, first, last, min, max
+- Strategy is a dictionary: `{column_name: strategy_type}`
+- Use `join_type` to control which rows are kept
+- Use `position` to control where new columns are inserted
+- Combine parameters for precise control over the operation
+
+---
+
+## Common Questions
+
+**Q: What happens if I don't specify a strategy when there are multiple matches?**  
+A: additory will raise an error asking you to specify a strategy. This prevents unexpected behavior.
+
+**Q: Can I use different strategies for different columns?**  
+A: Yes! Use a dictionary with multiple entries: `strategy={'amount': 'sum', 'count': 'count'}`
+
+**Q: What's the difference between 'first' and 'min'?**  
+A: 'first' takes the first row in order, 'min' takes the row with the minimum value. They can give different results.
+
+**Q: Can I create custom aggregation strategies?**  
+A: Not directly, but you can use `add.transform()` after `add.to()` to apply custom calculations.
+
+---
+
+## Next Steps
+
+- **[Real-World Scenarios](examples-to-05-real-world.html)** - See complete business workflows using these techniques
+- **[One-to-Many & Many-to-One Patterns](examples-to-03-patterns.html)** - Review when strategies are needed
+- **[API Reference](reference-to-basic.html)** - Complete `add.to()` documentation
+
+---
+
+**Version:** 0.1.3  
+**Last Updated:** March 9, 2026

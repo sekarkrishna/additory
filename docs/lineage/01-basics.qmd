@@ -1,0 +1,348 @@
+# Lineage Tracking Basics
+
+Track transformation history and understand data provenance by enabling lineage tracking in your operations.
+
+## Example 1: Enable and View Lineage
+
+Enable lineage tracking by adding `lineage=True` to any operation, then use `add.scan('@lineage', df)` to view the transformation history.
+
+```python
+import pandas as pd
+import additory as add
+
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey'],
+    'price': [100, 200, 150],
+    'quantity': [2, 1, 3]
+})
+
+# Transform with lineage tracking enabled
+result = add.transform(
+    '@calc',
+    df,
+    columns=['price', 'quantity'],
+    expression='price * quantity',
+    as_='total',
+    lineage=True  # Enable lineage tracking
+)
+
+# View lineage report
+lineage_report = add.scan('@lineage', result)
+print(lineage_report)
+```
+
+Output:
+```
+═══════════════════════════════════════════════════════════════
+LINEAGE REPORT
+═══════════════════════════════════════════════════════════════
+
+DataFrame: 3 rows × 4 columns
+Operations: 1 transformations applied
+
+───────────────────────────────────────────────────────────────
+Step 1: add.transform - 2026-03-11T14:23:45
+───────────────────────────────────────────────────────────────
+  Rows: 3 → 3 (no change)
+  Columns Added: total
+  
+  Parameters:
+    columns: ["price","quantity"]
+    expression: ["price * quantity"]
+    mode: "@calc"
+```
+
+**Key Points:**
+- Add `lineage=True` to any operation (transform, to, synthetic)
+- Lineage metadata is stored with the DataFrame
+- Use `add.scan('@lineage', df)` to generate a human-readable report
+- Report shows operation history, parameters, and column changes
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Example 2: Lineage with Filtering
+
+Lineage tracking works with all transform modes, including filtering operations.
+
+```python
+import pandas as pd
+import additory as add
+
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey', 'Thingamajig'],
+    'price': [100, 200, 150, 50],
+    'stock': [10, 5, 0, 15]
+})
+
+# Filter with lineage tracking
+result = add.transform(
+    '@filter',
+    df,
+    columns=['product', 'price', 'stock'],
+    where='stock > 0',
+    lineage=True
+)
+
+# View lineage report
+lineage_report = add.scan('@lineage', result)
+print(lineage_report)
+```
+
+Output:
+```
+═══════════════════════════════════════════════════════════════
+LINEAGE REPORT
+═══════════════════════════════════════════════════════════════
+
+DataFrame: 3 rows × 3 columns
+Operations: 1 transformations applied
+
+───────────────────────────────────────────────────────────────
+Step 1: add.transform - 2026-03-11T14:25:12
+───────────────────────────────────────────────────────────────
+  Rows: 4 → 3 (1 row filtered out)
+  Columns Added: none
+  
+  Parameters:
+    columns: ["product","price","stock"]
+    where: "stock > 0"
+    mode: "@filter"
+```
+
+**Key Insights:**
+- Lineage tracks row changes (4 → 3 rows)
+- Filter conditions are recorded in parameters
+- You can see exactly what was filtered and why
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Example 3: Multi-Operation Lineage Chain
+
+Lineage accumulates across multiple operations, giving you a complete transformation history.
+
+```python
+import pandas as pd
+import additory as add
+
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey'],
+    'price': [100, 200, 150],
+    'quantity': [2, 1, 3]
+})
+
+# Step 1: Calculate total
+result = add.transform(
+    '@calc',
+    df,
+    columns=['price', 'quantity'],
+    expression='price * quantity',
+    as_='total',
+    lineage=True
+)
+
+# Step 2: Filter high-value items (lineage continues)
+result = add.transform(
+    '@filter',
+    result,
+    columns=['product', 'total'],
+    where='total > 200',
+    lineage=True
+)
+
+# View complete lineage report
+lineage_report = add.scan('@lineage', result)
+print(lineage_report)
+```
+
+Output:
+```
+═══════════════════════════════════════════════════════════════
+LINEAGE REPORT
+═══════════════════════════════════════════════════════════════
+
+DataFrame: 2 rows × 2 columns
+Operations: 2 transformations applied
+
+───────────────────────────────────────────────────────────────
+Step 1: add.transform - 2026-03-11T14:27:33
+───────────────────────────────────────────────────────────────
+  Rows: 3 → 3 (no change)
+  Columns Added: total
+  
+  Parameters:
+    columns: ["price","quantity"]
+    expression: ["price * quantity"]
+    mode: "@calc"
+
+───────────────────────────────────────────────────────────────
+Step 2: add.transform - 2026-03-11T14:27:33
+───────────────────────────────────────────────────────────────
+  Rows: 3 → 2 (1 row filtered out)
+  Columns Added: none
+  
+  Parameters:
+    columns: ["product","total"]
+    where: "total > 200"
+    mode: "@filter"
+```
+
+**Key Features:**
+- Lineage persists across multiple operations
+- Each step is numbered and timestamped
+- You can see the complete transformation pipeline
+- Useful for debugging complex data workflows
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Lineage Tracking Features
+
+### What Gets Tracked
+- **Operation Type**: Which function was called (transform, to, synthetic)
+- **Timestamp**: When the operation occurred
+- **Parameters**: All operation parameters
+- **Row Changes**: Rows before and after
+- **Column Changes**: Columns added or modified
+- **Mode**: Specific transformation mode used
+
+### When to Use Lineage
+- **Debugging**: Understand how data was transformed
+- **Auditing**: Track data provenance for compliance
+- **Documentation**: Auto-generate transformation documentation
+- **Collaboration**: Share transformation history with team
+- **Quality Assurance**: Verify transformation steps
+
+### Performance Impact
+- Minimal overhead (<100ms per operation)
+- Metadata stored in memory only
+- No impact on computation speed
+- Lineage data is lightweight (JSON format)
+
+---
+
+## Enabling Lineage Tracking
+
+### In add.transform()
+```python
+result = add.transform(
+    '@calc',
+    df,
+    columns=['a', 'b'],
+    expression='a + b',
+    as_='c',
+    lineage=True  # Enable lineage
+)
+```
+
+### In add.to()
+```python
+result = add.to(
+    orders,
+    bring_from=customers,
+    bring='name',
+    against='customer_id',
+    lineage=True  # Enable lineage
+)
+```
+
+### In add.synthetic()
+```python
+result = add.synthetic(
+    '@new',
+    n=100,
+    strategy={'a': {'distribution': 'normal', 'mean': 0, 'std': 1}},
+    lineage=True  # Enable lineage
+)
+```
+
+---
+
+## Parameters
+
+### Required Parameters
+- `mode`: `'@lineage'` for lineage tracking
+- `df`: Input DataFrame with lineage metadata
+
+### Optional Parameters
+- `columns`: Filter report to specific columns (not yet implemented)
+- `trace`: Trace specific cell transformations (not yet implemented)
+- `as_type`: Output format (currently only 'text' supported)
+
+### Positional Parameters
+```python
+# Also works without naming certain parameters:
+lineage_report = add.scan('@lineage', df)
+```
+
+---
+
+## Error Handling
+
+If you forget to enable lineage tracking, `add.scan('@lineage', df)` provides a helpful error message:
+
+```python
+# Transform WITHOUT lineage tracking
+result = add.transform('@calc', df, expression='a + b', as_='c')
+
+# Try to get lineage report
+try:
+    lineage_report = add.scan('@lineage', result)
+except ValueError as e:
+    print(e)
+```
+
+Output:
+```
+No lineage metadata found. Lineage tracking must be enabled by adding
+lineage=True to add.to(), add.transform(), or add.synthetic() calls.
+
+Example:
+  df = add.transform('@calc', df, strategy={'total': 'price * qty'}, lineage=True)
+  result = add.scan('@lineage', df)
+```
+
+**Solution**: Add `lineage=True` to your operations to enable tracking.
+
+---
+
+## Limitations (v0.1.3)
+
+### Session-Only Lineage
+- Lineage metadata is stored in memory only
+- Not persisted when saving DataFrames to disk
+- Lost when Python session ends
+
+### Type Conversion Restriction
+- Cannot use `lineage=True` with `as_type` parameter
+- Lineage metadata would be lost during type conversion
+- Use lineage OR type conversion, not both
+
+### Future Enhancements (v0.2.0)
+- Persistent lineage with `add.save()` and `add.load()`
+- Cell-level tracing with `trace` parameter
+- Column-specific lineage with `columns` parameter
+- Lineage visualization and export
+- Lineage comparison and diff
+
+---
+
+## Best Practices
+
+1. **Enable lineage early**: Add `lineage=True` from the start of your pipeline
+2. **Check lineage regularly**: Use `add.scan('@lineage', df)` to verify transformations
+3. **Document with lineage**: Include lineage reports in documentation
+4. **Debug with lineage**: When data looks wrong, check the lineage first
+5. **Share lineage**: Include lineage reports when asking for help
+
+---
+
+## Next Steps
+
+- **Page 2**: Advanced lineage workflows and real-world use cases
+- **Troubleshooting Guide**: Common errors and solutions
+

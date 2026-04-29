@@ -1,0 +1,220 @@
+# Basic Data Scanning
+
+Inspect and analyze DataFrames using the `@analyze` mode.
+
+## Example 1: Basic Data Profiling
+
+Get comprehensive statistics about your DataFrame - data types, null counts, unique values, and statistical measures.
+
+```python
+import pandas as pd
+import additory as add
+
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey', 'Thingamajig'],
+    'price': [29.99, 49.99, None, 39.99],
+    'stock': [10, 5, 0, 15],
+    'category': ['Electronics', 'Electronics', 'Tools', 'Electronics']
+})
+
+# Analyze the DataFrame
+result = add.scan(
+    '@analyze',
+    df
+)
+
+print(result)
+```
+
+Output:
+```
+     column       dtype  count  null_count  null_pct  unique       mean        std    min    max
+0   product  String(Utf8)      4           0       0.0       4        NaN        NaN    NaN    NaN
+1     price       Float64      4           1      25.0       3  39.990000   10.00333  29.99  49.99
+2     stock         Int64      4           0       0.0       4   7.500000    6.45497   0.00  15.00
+3  category  String(Utf8)      4           0       0.0       2        NaN        NaN    NaN    NaN
+```
+
+**Key Points:**
+- Returns a DataFrame with 10 columns of analysis
+- `column`: Column name
+- `dtype`: Data type
+- `count`: Total row count
+- `null_count`: Number of null values
+- `null_pct`: Percentage of nulls
+- `unique`: Number of unique values
+- `mean`, `std`, `min`, `max`: Statistics (numeric columns only)
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Example 2: Analyze All Columns
+
+Analyze all columns in a DataFrame to understand data quality and distributions.
+
+```python
+import pandas as pd
+import additory as add
+
+df = pd.DataFrame({
+    'employee_id': [1, 2, 3, 4, 5],
+    'name': ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
+    'age': [25, 30, 35, 40, 45],
+    'salary': [50000, 60000, 70000, 80000, 90000],
+    'department': ['Engineering', 'Sales', 'Engineering', 'Sales', 'Engineering']
+})
+
+# Analyze all columns
+result = add.scan(
+    '@analyze',
+    df
+)
+
+print(result)
+```
+
+Output:
+```
+        column       dtype  count  null_count  null_pct  unique   mean       std      min      max
+0  employee_id       Int64      5           0       0.0       5    3.0  1.581139      1.0      5.0
+1         name  String(Utf8)      5           0       0.0       5    NaN       NaN      NaN      NaN
+2          age       Int64      5           0       0.0       5   35.0  7.905694     25.0     45.0
+3       salary       Int64      5           0       0.0       5  70000.0  15811.388  50000.0  90000.0
+4   department  String(Utf8)      5           0       0.0       2    NaN       NaN      NaN      NaN
+```
+
+**Key Insights:**
+- All 5 columns analyzed
+- No null values detected (null_count = 0)
+- Age has mean of 35 years, std of ~7.9 years
+- Salary has mean of $70,000, std of ~$15,811
+- Department has only 2 unique values (Engineering, Sales)
+
+**Note**: The `columns` parameter for filtering specific columns is not yet implemented in the Rust backend. Currently, all columns are analyzed.
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Example 3: Output Formats
+
+Choose how you want to receive the analysis results - as a DataFrame, dict, or text.
+
+```python
+import pandas as pd
+import additory as add
+
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey'],
+    'price': [29.99, 49.99, 19.99],
+    'stock': [10, 5, 15]
+})
+
+# DataFrame output (default)
+result_df = add.scan(
+    '@analyze',
+    df,
+    as_type='dataframe'
+)
+print("DataFrame output:")
+print(result_df)
+
+# Dict output - structured data
+result_dict = add.scan(
+    '@analyze',
+    df,
+    as_type='dict'
+)
+print("\nDict output:")
+print(result_dict)
+
+# Text output - formatted string
+result_text = add.scan(
+    '@analyze',
+    df,
+    as_type='text'
+)
+print("\nText output:")
+print(result_text)
+```
+
+Output:
+```
+DataFrame output:
+    column    dtype  count  null_count  null_pct  unique       mean        std    min    max
+0  product  String(Utf8)      3           0       0.0       3        NaN        NaN    NaN    NaN
+1    price  Float64      3           0       0.0       3  33.323333   15.01333  19.99  49.99
+2    stock    Int64      3           0       0.0       3  10.000000    5.00000   5.00  15.00
+
+Dict output:
+{'columns': ['column', 'dtype', 'count', 'null_count', 'null_pct', 'unique', 'mean', 'std', 'min', 'max'], 'rows': 3, 'data': '...'}
+
+Text output:
+shape: (3, 10)
+┌─────────┬──────────────┬───────┬────────────┬──────────┬────────┬───────────┬───────────┬───────┬───────┐
+│ column  ┆ dtype        ┆ count ┆ null_count ┆ null_pct ┆ unique ┆ mean      ┆ std       ┆ min   ┆ max   │
+│ ---     ┆ ---          ┆ ---   ┆ ---        ┆ ---      ┆ ---    ┆ ---       ┆ ---       ┆ ---   ┆ ---   │
+│ str     ┆ str          ┆ i64   ┆ i64        ┆ f64      ┆ i64    ┆ f64       ┆ f64       ┆ f64   ┆ f64   │
+╞═════════╪══════════════╪═══════╪════════════╪══════════╪════════╪═══════════╪═══════════╪═══════╪═══════╡
+│ product ┆ String(Utf8) ┆ 3     ┆ 0          ┆ 0.0      ┆ 3      ┆ null      ┆ null      ┆ null  ┆ null  │
+│ price   ┆ Float64      ┆ 3     ┆ 0          ┆ 0.0      ┆ 3      ┆ 33.323333 ┆ 15.013333 ┆ 19.99 ┆ 49.99 │
+│ stock   ┆ Int64        ┆ 3     ┆ 0          ┆ 0.0      ┆ 3      ┆ 10.0      ┆ 5.0       ┆ 5.0   ┆ 15.0  │
+└─────────┴──────────────┴───────┴────────────┴──────────┴────────┴───────────┴───────────┴───────┴───────┘
+```
+
+**Output Format Options:**
+- `as_type='dataframe'` (default): Returns DataFrame for further analysis
+- `as_type='dict'`: Returns dict with columns, rows, and data
+- `as_type='text'`: Returns formatted string for display
+
+**When to Use Each:**
+- DataFrame: When you need to filter, sort, or further analyze the results
+- Dict: When you need structured data for APIs or JSON serialization
+- Text: When you need human-readable output for logging or display
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Parameters
+
+### Required Parameters
+- `mode`: `'@analyze'` for statistical profiling
+- `df`: Input DataFrame (pandas or polars)
+
+### Optional Parameters
+- `columns`: Column filter (not yet implemented - currently analyzes all columns)
+- `where`: SQL-like filter condition (not yet implemented)
+- `rows`: Row range specifications (not yet implemented)
+- `as_type`: Output format (`'dataframe'`, `'dict'`, `'text'`)
+
+### Positional Parameters
+```python
+# Also works without naming certain parameters:
+result = add.scan('@analyze', df, as_type='dataframe')
+```
+
+---
+
+## Analysis Columns Reference
+
+| Column | Description | Type |
+|--------|-------------|------|
+| `column` | Column name | String |
+| `dtype` | Data type | String |
+| `count` | Total row count | Integer |
+| `null_count` | Number of null values | Integer |
+| `null_pct` | Percentage of nulls | Float |
+| `unique` | Number of unique values | Integer |
+| `mean` | Average (numeric only) | Float or null |
+| `std` | Standard deviation (numeric only) | Float or null |
+| `min` | Minimum value (numeric only) | Float or null |
+| `max` | Maximum value (numeric only) | Float or null |
+
+---
+
+## Next Steps
+
+- **Page 2**: Lineage tracking with `@lineage` mode
+- **Page 3**: Real-world data quality workflows

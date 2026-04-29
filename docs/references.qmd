@@ -1,0 +1,104 @@
+# References {.unnumbered}
+
+## Official Resources
+
+### Additory
+
+- **PyPI Package**: [https://pypi.org/project/additory/](https://pypi.org/project/additory/)
+- **GitHub Repository**: [https://github.com/sekarkrishna/additory](https://github.com/sekarkrishna/additory)
+- **Issue Tracker**: [https://github.com/sekarkrishna/additory/issues](https://github.com/sekarkrishna/additory/issues)
+
+### Dependencies
+
+- **Polars**: [https://www.pola.rs/](https://www.pola.rs/)
+- **Pandas**: [https://pandas.pydata.org/](https://pandas.pydata.org/)
+- **PyArrow**: [https://arrow.apache.org/docs/python/](https://arrow.apache.org/docs/python/)
+- **Rust**: [https://www.rust-lang.org/](https://www.rust-lang.org/)
+- **PyO3**: [https://pyo3.rs/](https://pyo3.rs/)
+- **Maturin**: [https://github.com/PyO3/maturin](https://github.com/PyO3/maturin)
+
+## Related Projects
+
+### DataFrame Libraries
+
+- **Polars Documentation**: [https://pola-rs.github.io/polars-book/](https://pola-rs.github.io/polars-book/)
+- **Pandas Documentation**: [https://pandas.pydata.org/docs/](https://pandas.pydata.org/docs/)
+- **Apache Arrow**: [https://arrow.apache.org/](https://arrow.apache.org/)
+
+### Rust for Python
+
+- **PyO3 Guide**: [https://pyo3.rs/latest/](https://pyo3.rs/latest/)
+- **Maturin Guide**: [https://www.maturin.rs/](https://www.maturin.rs/)
+
+## Community
+
+### Contact
+
+- **Author**: Krishnamoorthy Sankaran
+- **Email**: krishnamoorthy.sankaran@sekrad.org
+
+### Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request on GitHub.
+
+### Support
+
+For issues, questions, or feature requests:
+- Open an issue on [GitHub Issues](https://github.com/sekarkrishna/additory/issues)
+- Email the author directly
+
+## Citation
+
+If you use additory in your research or project, please cite:
+
+```bibtex
+@software{additory2026,
+  author = {Sankaran, Krishnamoorthy},
+  title = {Additory: Elegant data operations for DataFrames},
+  year = {2026},
+  url = {https://github.com/sekarkrishna/additory},
+  version = {0.1.3a10}
+}
+```
+
+## License
+
+Additory is released under the MIT License.
+
+```
+MIT License
+
+Copyright (c) 2026 Krishnamoorthy Sankaran
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## Acknowledgments
+
+Built with:
+- [Rust](https://www.rust-lang.org/) - Systems programming language
+- [PyO3](https://pyo3.rs/) - Rust bindings for Python
+- [Polars](https://www.pola.rs/) - Lightning-fast DataFrame library
+- [Maturin](https://github.com/PyO3/maturin) - Build and publish Rust-based Python packages
+
+Special thanks to the open-source community for their amazing tools and libraries.
+
+---
+
+**Made with ❤️ for the data science community**

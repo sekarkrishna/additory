@@ -1,0 +1,371 @@
+---
+title: "add.to() - Real-World Scenarios"
+---
+
+## Overview
+
+See how to apply `add.to()` in complete business workflows. These examples combine multiple techniques you've learned to solve real-world data problems.
+
+**What you'll learn:**
+- Multi-step data enrichment workflows
+- Combining lookups from multiple reference tables
+- Sales analytics with aggregation
+- Best practices for production use
+
+**Prerequisites:**
+- [Basic Lookup](examples-to-01-basic.html) - Single column operations
+- [Multiple Columns & Keys](examples-to-02-multiple.html) - Working with multiple columns
+- [Aggregation Strategies](examples-to-04-strategy.html) - Using strategy parameter
+
+---
+
+## Example 1: E-commerce Order Enrichment
+
+**Business Context:** You have a raw orders table with just IDs. You need to create a complete order report with customer names, emails, customer tiers, product names, and prices for your fulfillment team.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Raw orders (just IDs and quantities)
+orders = pd.DataFrame({
+    'order_id': [1001, 1002, 1003],
+    'customer_id': [101, 102, 103],
+    'product_id': [501, 502, 503],
+    'quantity': [2, 1, 3]
+})
+
+# Customer master data
+customers = pd.DataFrame({
+    'customer_id': [101, 102, 103],
+    'name': ['Alice', 'Bob', 'Charlie'],
+    'email': ['alice@email.com', 'bob@email.com', 'charlie@email.com'],
+    'tier': ['Gold', 'Silver', 'Bronze']
+})
+
+# Product catalog
+products = pd.DataFrame({
+    'product_id': [501, 502, 503],
+    'product_name': ['Widget', 'Gadget', 'Doohickey'],
+    'price': [29.99, 49.99, 19.99]
+})
+
+# Step 1: Add customer information
+enriched_orders = add.to(
+    orders,
+    bring_from=customers,
+    bring=['name', 'email', 'tier'],
+    against='customer_id'
+)
+
+# Positional parameters (also works without naming certain parameters):
+# enriched_orders = add.to(orders, customers, ['name', 'email', 'tier'], 'customer_id')
+
+print("After adding customer info:")
+print(enriched_orders)
+
+# Step 2: Add product information
+enriched_orders = add.to(
+    enriched_orders,
+    bring_from=products,
+    bring=['product_name', 'price'],
+    against='product_id'
+)
+
+print("\nFully enriched orders:")
+print(enriched_orders)
+
+# Step 3: Calculate total (using pandas)
+enriched_orders['total'] = enriched_orders['quantity'] * enriched_orders['price']
+
+print("\nFinal order report:")
+print(enriched_orders[['order_id', 'name', 'email', 'tier', 
+                        'product_name', 'quantity', 'price', 'total']])
+```
+
+**Output:**
+```
+After adding customer info:
+   order_id  customer_id  product_id  quantity     name              email     tier
+0      1001          101         501         2    Alice  alice@email.com     Gold
+1      1002          102         502         1      Bob    bob@email.com   Silver
+2      1003          103         503         3  Charlie charlie@email.com   Bronze
+
+Fully enriched orders:
+   order_id  customer_id  product_id  quantity     name              email     tier product_name  price
+0      1001          101         501         2    Alice  alice@email.com     Gold       Widget  29.99
+1      1002          102         502         1      Bob    bob@email.com   Silver       Gadget  49.99
+2      1003          103         503         3  Charlie charlie@email.com   Bronze    Doohickey  19.99
+
+Final order report:
+   order_id     name              email     tier product_name  quantity  price  total
+0      1001    Alice  alice@email.com     Gold       Widget         2  29.99  59.98
+1      1002      Bob    bob@email.com   Silver       Gadget         1  49.99  49.99
+2      1003  Charlie charlie@email.com   Bronze    Doohickey         3  19.99  59.97
+```
+
+**Explanation:**
+- Start with minimal order data (just IDs)
+- First enrichment: Add customer details (name, email, tier)
+- Second enrichment: Add product details (name, price)
+- Final step: Calculate totals using pandas
+- Each `add.to()` builds on the previous result
+- This pattern is common in ETL (Extract, Transform, Load) workflows
+
+**Key Takeaways:**
+- Chain multiple `add.to()` calls for complex enrichment
+- Each step adds more context to your data
+- Keep reference tables separate for maintainability
+- Combine with pandas/polars operations for calculations
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 2: Sales Analytics with Aggregation
+
+**Business Context:** You have detailed transaction data and need to create a store performance report showing total revenue by store, along with store metadata (name and region).
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Detailed transactions
+transactions = pd.DataFrame({
+    'transaction_id': [1, 2, 3, 4, 5, 6],
+    'store_id': [1, 1, 2, 2, 3, 3],
+    'amount': [100, 150, 200, 250, 175, 225],
+    'date': ['2024-01-15', '2024-01-16', '2024-01-15', 
+             '2024-01-16', '2024-01-15', '2024-01-16']
+})
+
+# Store master data
+stores = pd.DataFrame({
+    'store_id': [1, 2, 3],
+    'store_name': ['Downtown', 'Mall', 'Airport'],
+    'region': ['North', 'South', 'East']
+})
+
+# Aggregate transactions to store level
+store_performance = add.to(
+    stores,
+    bring_from=transactions,
+    bring='amount',
+    against='store_id',
+    strategy={'amount': 'sum'}  # Sum all transactions per store
+)
+
+# Positional parameters (also works without naming certain parameters):
+# store_performance = add.to(stores, transactions, 'amount', 'store_id', strategy={'amount': 'sum'})
+
+print("Store Performance Report:")
+print(store_performance)
+
+# Calculate percentage of total
+total_revenue = store_performance['amount'].sum()
+store_performance['pct_of_total'] = (store_performance['amount'] / total_revenue * 100).round(2)
+
+print("\nWith Percentage:")
+print(store_performance)
+```
+
+**Output:**
+```
+Store Performance Report:
+   store_id store_name region  amount
+0         1   Downtown  North     250
+1         2       Mall  South     450
+2         3    Airport   East     400
+
+With Percentage:
+   store_id store_name region  amount  pct_of_total
+0         1   Downtown  North     250         22.73
+1         2       Mall  South     450         40.91
+2         3    Airport   East     400         36.36
+```
+
+**Explanation:**
+- Start with store master data (the target)
+- Aggregate transactions using `strategy={'amount': 'sum'}`
+- Downtown: 100 + 150 = 250
+- Mall: 200 + 250 = 450
+- Airport: 175 + 225 = 400
+- Add percentage calculations using pandas
+- This pattern is common for creating summary reports
+
+**Key Takeaways:**
+- Use stores as target (not transactions) for aggregation
+- Strategy parameter handles multiple transactions per store
+- Result has one row per store with aggregated values
+- Combine with pandas for additional calculations
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Best Practices for Production Use
+
+### 1. Validate Your Data First
+
+```python
+# Check for missing keys before joining
+missing_customers = orders[~orders['customer_id'].isin(customers['customer_id'])]
+if len(missing_customers) > 0:
+    print(f"Warning: {len(missing_customers)} orders have invalid customer IDs")
+```
+
+### 2. Use Explicit Column Names
+
+```python
+# Good: Explicit and clear
+result = add.to(
+    orders,
+    bring_from=customers,
+    bring=['name', 'email'],
+    against='customer_id'
+)
+
+# Avoid: Relying on column order or implicit behavior
+```
+
+### 3. Handle Missing Matches
+
+```python
+# Use left join to keep all orders
+result = add.to(
+    orders,
+    bring_from=customers,
+    bring='name',
+    against='customer_id',
+    join_type='left'
+)
+
+# Check for missing matches
+missing = result[result['name'].isna()]
+if len(missing) > 0:
+    print(f"Warning: {len(missing)} orders have no customer match")
+```
+
+### 4. Chain Operations Carefully
+
+```python
+# Good: Clear intermediate steps
+step1 = add.to(orders, customers, 'name', 'customer_id')
+step2 = add.to(step1, products, 'price', 'product_id')
+final = step2
+
+# Also good: Chain with clear variable names
+result = add.to(orders, customers, 'name', 'customer_id')
+result = add.to(result, products, 'price', 'product_id')
+```
+
+### 5. Document Your Strategy Choices
+
+```python
+# Good: Comment explains why
+result = add.to(
+    customers,
+    bring_from=orders,
+    bring='amount',
+    against='customer_id',
+    strategy={'amount': 'sum'}  # Total revenue per customer
+)
+```
+
+---
+
+## Common Patterns
+
+### Pattern 1: Dimension Table Enrichment
+```python
+# Add dimension attributes to fact table
+fact_enriched = add.to(fact_table, dim_table, ['attr1', 'attr2'], 'key')
+```
+
+### Pattern 2: Aggregation to Summary Level
+```python
+# Aggregate detail to summary
+summary = add.to(master, detail, 'metric', 'key', strategy={'metric': 'sum'})
+```
+
+### Pattern 3: Multi-Step Enrichment
+```python
+# Chain multiple enrichments
+result = add.to(base, ref1, 'col1', 'key1')
+result = add.to(result, ref2, 'col2', 'key2')
+result = add.to(result, ref3, 'col3', 'key3')
+```
+
+### Pattern 4: Lookup with Fallback
+```python
+# Use left join and fill missing values
+result = add.to(target, ref, 'col', 'key', join_type='left')
+result['col'] = result['col'].fillna('Unknown')
+```
+
+---
+
+## Performance Tips
+
+1. **Filter before joining**: Reduce data size before `add.to()`
+2. **Use appropriate join types**: `inner` is faster than `left` when you don't need all rows
+3. **Aggregate early**: Summarize large tables before joining
+4. **Index your keys**: Ensure key columns are indexed (for large datasets)
+5. **Consider memory**: For very large datasets, process in chunks
+
+---
+
+## Key Takeaways
+
+- Chain multiple `add.to()` calls for complex workflows
+- Start with master/dimension tables, add details as needed
+- Use aggregation strategies for summary reports
+- Validate data and handle missing matches explicitly
+- Document your strategy choices for maintainability
+- Combine with pandas/polars for calculations and transformations
+
+---
+
+## Common Questions
+
+**Q: Should I add all columns at once or in multiple steps?**  
+A: It depends. Multiple steps are clearer and easier to debug, but a single step is more efficient. For production, prefer clarity unless performance is critical.
+
+**Q: How do I handle slowly changing dimensions (SCD)?**  
+A: Use date-based keys or add date filters before joining. We'll cover this in advanced examples.
+
+**Q: Can I use add.to() with very large datasets (millions of rows)?**  
+A: Yes, but consider filtering and aggregating first. For extremely large data, consider database joins instead.
+
+**Q: What if my keys have different names in different tables?**  
+A: Rename columns first using pandas/polars, or use advanced `add.to()` features (covered in advanced examples).
+
+---
+
+## Next Steps
+
+- **[add.transform() Examples](examples-transform-01-calc.html)** - Learn data transformation operations
+- **[Aggregation Strategies](examples-to-04-strategy.html)** - Review strategy parameter details
+- **[API Reference](reference-to-basic.html)** - Complete `add.to()` documentation
+
+---
+
+## Congratulations!
+
+You've completed the `add.to()` tutorial series. You now know how to:
+- ✅ Perform basic lookups
+- ✅ Work with multiple columns and keys
+- ✅ Handle one-to-many and many-to-one patterns
+- ✅ Use aggregation strategies
+- ✅ Build complete real-world workflows
+
+Ready to learn more? Explore `add.transform()` for data transformations, or dive into the API reference for advanced features.
+
+---
+
+**Version:** 0.1.3  
+**Last Updated:** March 9, 2026

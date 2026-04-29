@@ -1,0 +1,238 @@
+---
+title: "add.to() - Basic Lookup"
+---
+
+## Overview
+
+Learn the fundamentals of `add.to()` by bringing data from one DataFrame to another using simple lookups. This page covers the most basic use case: adding a single column from a reference DataFrame to a target DataFrame based on a matching key.
+
+**What you'll learn:**
+- How to bring a single column from one DataFrame to another
+- How to specify the key column for matching
+- How to read the full function signature
+- Basic lookup behavior and output
+
+---
+
+## Example 1: Add Customer Name to Orders
+
+**Business Context:** You have an orders table with customer IDs, and you need to add customer names from a customers table for better readability in reports.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Create sample data
+customers = pd.DataFrame({
+    'customer_id': [1, 2, 3],
+    'name': ['Alice', 'Bob', 'Charlie']
+})
+
+orders = pd.DataFrame({
+    'order_id': [101, 102, 103],
+    'customer_id': [1, 2, 3],
+    'amount': [100, 200, 150]
+})
+
+# Bring customer name to orders
+result = add.to(
+    orders,                      # Target DataFrame
+    bring_from=customers,        # Source DataFrame
+    bring='name',                # Column to bring
+    against='customer_id'        # Key to match on
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.to(orders, customers, 'name', 'customer_id')
+
+print(result)
+```
+
+**Output:**
+```
+   order_id  customer_id  amount     name
+0       101            1     100    Alice
+1       102            2     200      Bob
+2       103            3     150  Charlie
+```
+
+**Explanation:**
+- `orders` is the target DataFrame where we want to add data
+- `bring_from=customers` specifies where to get the data from
+- `bring='name'` tells additory to bring the 'name' column
+- `against='customer_id'` specifies the key column to match on
+- The result has all original columns from `orders` plus the new 'name' column
+
+**Note:** This also works with polars DataFrames. Simply replace `pd.DataFrame` with `pl.DataFrame` and import `polars as pl`.
+
+---
+
+## Example 2: Add Product Price to Cart Items
+
+**Business Context:** Your shopping cart has product IDs, and you need to add the current price from the products catalog.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Products catalog
+products = pd.DataFrame({
+    'product_id': [101, 102, 103, 104],
+    'price': [29.99, 49.99, 19.99, 99.99]
+})
+
+# Shopping cart
+cart = pd.DataFrame({
+    'cart_item_id': [1, 2, 3],
+    'product_id': [102, 101, 104],
+    'quantity': [2, 1, 1]
+})
+
+# Bring price to cart
+result = add.to(
+    cart,
+    bring_from=products,
+    bring='price',
+    against='product_id'
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.to(cart, products, 'price', 'product_id')
+
+print(result)
+```
+
+**Output:**
+```
+   cart_item_id  product_id  quantity  price
+0             1         102         2  49.99
+1             2         101         1  29.99
+2             3         104         1  99.99
+```
+
+**Explanation:**
+- Each cart item now has its corresponding price
+- The matching is done automatically based on `product_id`
+- The order of rows in the target DataFrame is preserved
+- Unmatched products in the catalog (103) are ignored
+
+---
+
+## Example 3: Add Department to Employees
+
+**Business Context:** Your employee records have department codes, and you need to add the full department name from a departments lookup table.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Departments lookup
+departments = pd.DataFrame({
+    'dept_code': ['ENG', 'SAL', 'MKT', 'HR'],
+    'dept_name': ['Engineering', 'Sales', 'Marketing', 'Human Resources']
+})
+
+# Employees (each in different department)
+employees = pd.DataFrame({
+    'emp_id': [1001, 1002, 1003, 1004],
+    'name': ['Alice', 'Bob', 'Charlie', 'David'],
+    'dept_code': ['ENG', 'SAL', 'MKT', 'HR']
+})
+
+# Bring department name to employees
+result = add.to(
+    employees,
+    bring_from=departments,
+    bring='dept_name',
+    against='dept_code'
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.to(employees, departments, 'dept_name', 'dept_code')
+
+print(result)
+```
+
+**Output:**
+```
+   emp_id     name dept_code       dept_name
+0    1001    Alice       ENG     Engineering
+1    1002      Bob       SAL           Sales
+2    1003  Charlie       MKT       Marketing
+3    1004    David        HR  Human Resources
+```
+
+**Explanation:**
+- Each employee has a unique department in this example
+- The lookup table acts as a reference - each unique dept_code maps to one dept_name
+- This is a classic "lookup" or "dimension table" pattern in data warehousing
+- When multiple employees share the same department, you'll need aggregation strategies (covered in [Aggregation Strategies](examples-to-04-strategy.html))
+
+---
+
+## Understanding the Signature
+
+The full `add.to()` signature for basic usage:
+
+```python
+result = add.to(
+    target_df,                   # Required: DataFrame to add columns to
+    bring_from=source_df,        # Required: DataFrame to bring columns from
+    bring='column_name',         # Required: Column to bring (string)
+    against='key_column',        # Required: Key column to match on (string)
+    position=None,               # Optional: Where to place new column
+    strategy=None,               # Optional: Aggregation strategy (covered later)
+    join_type='lookup',          # Optional: Type of join (default: 'lookup')
+    logging=False,               # Optional: Enable detailed logs
+    lineage=False,               # Optional: Track data lineage
+    as_type=None                 # Optional: Force output type
+)
+```
+
+**For basic lookups, you only need the first 4 parameters.**
+
+---
+
+## Key Takeaways
+
+- `add.to()` brings columns from one DataFrame to another based on matching keys
+- The first parameter is always the target DataFrame (where you want to add data)
+- Use `bring_from=` to specify the source DataFrame
+- Use `bring=` to specify which column to bring
+- Use `against=` to specify the key column for matching
+- The result preserves the order and structure of the target DataFrame
+- Unmatched rows in the source are ignored (lookup behavior)
+
+---
+
+## Common Questions
+
+**Q: What if the key column has different names in each DataFrame?**  
+A: The key column must have the same name in both DataFrames for basic usage. We'll cover handling different key names in advanced examples.
+
+**Q: What happens if a key in the target doesn't exist in the source?**  
+A: The brought column will have `NaN` (null) for that row.
+
+**Q: Can I bring multiple columns at once?**  
+A: Yes! We'll cover that in the next page: [Multiple Columns & Keys](examples-to-02-multiple.html).
+
+**Q: What if multiple rows in the source match the same key?**  
+A: By default, you'll get an error. We'll cover aggregation strategies in [Aggregation Strategies](examples-to-04-strategy.html).
+
+---
+
+## Next Steps
+
+- **[Multiple Columns & Keys](examples-to-02-multiple.html)** - Learn to bring multiple columns and use multiple keys
+- **[API Reference](reference-to-basic.html)** - Complete `add.to()` documentation
+
+---
+
+**Version:** 0.1.3  
+**Last Updated:** March 9, 2026

@@ -1,0 +1,25 @@
+/* Shuffle button styling */
+.shuffle-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: box-shadow 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.shuffle-btn:hover {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Shuffle domain label */
+.shuffle-domain {
+  margin-left: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--md-default-fg-color--light);
+  font-style: italic;
+}

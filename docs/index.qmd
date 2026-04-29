@@ -1,0 +1,109 @@
+# Welcome {.unnumbered}
+
+Welcome to the **Additory Documentation** - your comprehensive guide to elegant data operations for DataFrames.
+
+## About Additory
+
+**Additory** is a Rust-powered Python library that provides intuitive data transformations, lookups, and synthetic data generation for both Polars and Pandas DataFrames.
+
+### Key Features
+
+- 🔗 **Intuitive Lookups** - Add columns from external sources with simple syntax
+- ⚡ **Powerful Transforms** - Calculate, filter, sort, aggregate with mode-based operations
+- 🎲 **Synthetic Data** - Generate realistic test data or augment existing datasets
+- 📊 **Lineage Tracking** - Track data transformations and view operation history
+- 🔍 **Data Scanning** - Analyze data quality and inspect DataFrames
+- 🚀 **Rust Performance** - Built with Rust for blazing-fast operations
+- 🐼 **Polars & Pandas** - Works seamlessly with both DataFrame libraries
+
+## Installation
+
+```bash
+pip install additory
+```
+
+**Requirements:**
+- Python 3.9+
+- Polars (required)
+- Pandas (optional)
+
+## Quick Start
+
+```python
+import additory as add
+import polars as pl
+
+# Add data from external sources
+orders = pl.DataFrame({'id': [1, 2], 'customer_id': [101, 102]})
+customers = pl.DataFrame({'customer_id': [101, 102], 'name': ['Alice', 'Bob']})
+result = add.to(orders, bring_from=customers, bring=['name'], against='customer_id')
+
+# Transform data
+df = pl.DataFrame({'x': [1, 2, 3]})
+result = add.transform('@calc', df, strategy={'x_squared': 'x ** 2'})
+
+# Generate synthetic data
+result = add.synthetic('@new', n=100, strategy={'age': 'normal(40, 10)'})
+```
+
+## Documentation Structure
+
+This book is organized into the following sections:
+
+### Core Functions
+
+1. **add.to()** - Data lookups and joins
+   - Basic lookups
+   - Multiple columns and keys
+   - Relationship patterns
+   - Aggregation strategies
+   - Real-world scenarios
+
+2. **add.transform()** - Data transformations
+   - Calculations
+   - Filtering and sorting
+   - Aggregation
+   - Advanced modes
+   - Real-world workflows
+
+3. **add.synthetic()** - Synthetic data generation
+   - Basic generation
+   - Statistical distributions
+   - Data augmentation
+   - Real-world use cases
+
+4. **add.scan()** - Data analysis and inspection
+   - Basic analysis
+   - Lineage tracking
+   - Real-world analysis
+
+### Advanced Topics
+
+5. **Lineage Tracking** - Understanding data provenance
+   - Basics of lineage
+   - Advanced lineage workflows
+
+6. **Guides & Troubleshooting** - Common issues and solutions
+
+## Version
+
+Current version: **0.1.3a10** (Alpha Release)
+
+## Links
+
+- **PyPI**: [https://pypi.org/project/additory/](https://pypi.org/project/additory/)
+- **GitHub**: [https://github.com/sekarkrishna/additory](https://github.com/sekarkrishna/additory)
+- **Issues**: [https://github.com/sekarkrishna/additory/issues](https://github.com/sekarkrishna/additory/issues)
+
+## License
+
+MIT License - see [LICENSE](https://github.com/sekarkrishna/additory/blob/main/LICENSE) for details.
+
+## Author
+
+**Krishnamoorthy Sankaran**  
+Email: krishnamoorthy.sankaran@sekrad.org
+
+---
+
+**Made with ❤️ for the data science community**

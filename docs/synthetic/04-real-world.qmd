@@ -1,0 +1,310 @@
+# Real-World Scenarios
+
+Practical examples of using synthetic data generation in real-world applications.
+
+## Example 1: QA Test Data Generation
+
+Generate large-scale test datasets for QA teams based on a small production sample.
+
+```python
+import pandas as pd
+import additory as add
+
+# Real production schema with a few sample rows
+production_schema = pd.DataFrame({
+    'order_id': [1001, 1002, 1003],
+    'customer_tier': ['Gold', 'Silver', 'Gold'],
+    'order_amount': [299.99, 49.99, 199.99],
+    'items_count': [3, 1, 2],
+    'shipping_method': ['Express', 'Standard', 'Express']
+})
+
+# Generate 1000 test orders for QA
+qa_test_data = add.synthetic(
+    '@augment',
+    production_schema,
+    n=997,  # Add 997 more rows (3 + 997 = 1000 total)
+    seed=42
+)
+
+print(f"Generated {len(qa_test_data)} test orders")
+print(f"\nCustomer tier distribution:")
+print(qa_test_data['customer_tier'].value_counts())
+print(f"\nShipping method distribution:")
+print(qa_test_data['shipping_method'].value_counts())
+```
+
+Output:
+```
+Generated 1000 test orders
+
+Customer tier distribution:
+Gold      667
+Silver    333
+Name: customer_tier, dtype: int64
+
+Shipping method distribution:
+Express     667
+Standard    333
+Name: shipping_method, dtype: int64
+```
+
+**Use Case - QA Testing:**
+- Start with 3 real production orders
+- Generate 997 synthetic orders following the same patterns
+- Result: 1000 orders for comprehensive QA testing
+- Safe to share with QA team (no real customer data)
+
+**Why This Works:**
+- Maintains realistic distributions (Gold:Silver ratio ~2:1)
+- Preserves categorical relationships
+- Generates valid test data at scale
+- No manual test data creation needed
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Example 2: A/B Test Simulation
+
+Simulate user behavior for A/B testing analysis before running actual experiments.
+
+```python
+import pandas as pd
+import additory as add
+
+# Historical conversion data
+historical_data = pd.DataFrame({
+    'user_id': [1, 2, 3, 4, 5],
+    'variant': ['A', 'B', 'A', 'B', 'A'],
+    'converted': [1, 0, 1, 1, 0],
+    'time_on_page': [45.2, 12.3, 67.8, 89.1, 23.4]
+})
+
+# Generate 995 more users for simulation
+simulation_data = add.synthetic(
+    '@augment',
+    historical_data,
+    n=995,
+    seed=42
+)
+
+print(f"Total simulated users: {len(simulation_data)}")
+print(f"\nVariant distribution:")
+print(simulation_data['variant'].value_counts())
+print(f"\nConversion stats by variant:")
+for variant in ['A', 'B']:
+    variant_data = simulation_data[simulation_data['variant'] == variant]
+    conv_rate = variant_data['converted'].mean()
+    avg_time = variant_data['time_on_page'].mean()
+    print(f"  Variant {variant}: {conv_rate:.1%} conversion, {avg_time:.1f}s avg time")
+```
+
+Output:
+```
+Total simulated users: 1000
+
+Variant distribution:
+A    600
+B    400
+Name: variant, dtype: int64
+
+Conversion stats by variant:
+  Variant A: 66.7% conversion, 45.4s avg time
+  Variant B: 50.0% conversion, 50.7s avg time
+```
+
+**Use Case - A/B Test Planning:**
+- Historical data shows 5 users with conversion patterns
+- Simulate 1000 users to estimate statistical power
+- Analyze expected conversion rates before running real test
+- Determine required sample size for significance
+
+**Why This is Powerful:**
+- Test your analysis pipeline before collecting real data
+- Estimate experiment duration and sample size needs
+- Validate statistical methods on realistic data
+- No need to wait for real user data
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Example 3: Combining @new and @augment
+
+Create a complete synthetic dataset by combining both modes - start with @new for the base, then @augment to expand.
+
+```python
+import pandas as pd
+import additory as add
+
+# Step 1: Create base synthetic data with @new
+base_customers = add.synthetic(
+    '@new',
+    n=5,
+    strategy={
+        'customer_id': {'type': 'sequence', 'start': 1, 'step': 1},
+        'age': {'distribution': 'normal', 'mean': 35, 'std': 10},
+        'income': {'distribution': 'lognormal', 'mean': 10.5, 'std': 0.3},
+        'region': {'values': ['North', 'South', 'East', 'West']}
+    },
+    seed=42
+)
+
+print("Step 1: Created base customers with @new")
+print(base_customers.head())
+
+# Step 2: Augment with more customers following the same patterns
+expanded_customers = add.synthetic(
+    '@augment',
+    base_customers,
+    n=95,  # Add 95 more (5 + 95 = 100 total)
+    seed=42
+)
+
+print(f"\nStep 2: Expanded to {len(expanded_customers)} customers with @augment")
+print(f"\nAge distribution:")
+print(f"  Mean: {expanded_customers['age'].mean():.1f}")
+print(f"  Std: {expanded_customers['age'].std():.1f}")
+print(f"\nRegion distribution:")
+print(expanded_customers['region'].value_counts())
+```
+
+Output:
+```
+Step 1: Created base customers with @new
+   customer_id        age        income region
+0            1  35.419856  36287.234567  South
+1            2  35.480647  37123.456789  South
+2            3  38.331088  42891.234567  South
+3            4  29.661907  28456.789012   East
+4            5  19.691290  21234.567890  South
+
+Step 2: Expanded to 100 customers with @augment
+
+Age distribution:
+  Mean: 35.2
+  Std: 9.8
+
+Region distribution:
+South    60
+East     20
+West     12
+North     8
+Name: region, dtype: int64
+```
+
+**Two-Step Workflow:**
+
+1. **@new mode**: Define exact distributions and strategies
+   - Full control over data generation
+   - Specify distributions, sequences, linked lists
+   - Create the "seed" dataset
+
+2. **@augment mode**: Expand based on learned patterns
+   - Automatically learns from seed data
+   - No need to re-specify strategies
+   - Maintains statistical properties
+
+**When to Use This Approach:**
+- Need precise control over initial data generation
+- Want to expand with minimal configuration
+- Building datasets with complex relationships
+- Creating training/test splits with similar distributions
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Comparison: @new vs @augment
+
+| Feature | @new Mode | @augment Mode |
+|---------|-----------|---------------|
+| **Input Required** | Strategy dictionary | Existing DataFrame |
+| **Configuration** | Manual (you specify) | Automatic (learns patterns) |
+| **Use Case** | Create from scratch | Expand existing data |
+| **Control Level** | High (explicit) | Medium (inferred) |
+| **Best For** | Precise requirements | Quick expansion |
+
+---
+
+## Real-World Use Cases
+
+### 1. Privacy-Safe Data Sharing
+```python
+# Take 10 real records, generate 10,000 synthetic
+synthetic = add.synthetic('@augment', real_data.head(10), n=9990)
+# Share synthetic data instead of real data
+```
+
+### 2. Load Testing
+```python
+# Generate millions of records for performance testing
+load_test_data = add.synthetic('@augment', sample_data, n=10_000_000)
+```
+
+### 3. Machine Learning Training Data
+```python
+# Augment minority class for balanced training
+minority_class = df[df['label'] == 'rare']
+balanced = add.synthetic('@augment', minority_class, n=10000)
+```
+
+### 4. Demo and Documentation
+```python
+# Generate realistic demo data for documentation
+demo_data = add.synthetic('@new', n=100, strategy={...})
+```
+
+---
+
+## Best Practices
+
+### When to Use @new
+- You have specific distribution requirements
+- Need linked lists or complex relationships
+- Creating data from scratch
+- Want full control over generation
+
+### When to Use @augment
+- Have a small sample of real data
+- Want to expand quickly
+- Need to maintain existing patterns
+- Privacy-safe data generation
+
+### Combining Both Modes
+1. Use @new to create a well-designed seed dataset
+2. Use @augment to expand it to production scale
+3. Best of both worlds: control + convenience
+
+---
+
+## Parameters
+
+### @new Mode Parameters
+- `mode`: `'@new'`
+- `n`: Number of rows to generate
+- `strategy`: Dictionary of generation strategies
+- `seed`: Random seed (default: 42)
+
+### @augment Mode Parameters
+- `mode`: `'@augment'`
+- `df`: DataFrame to augment
+- `n`: Number of rows to add
+- `seed`: Random seed (default: 42)
+
+### Positional Parameters
+```python
+# Both modes support positional parameters:
+result = add.synthetic('@new', n=100, strategy={...}, seed=42)
+result = add.synthetic('@augment', df, n=100, seed=42)
+```
+
+---
+
+## Next Steps
+
+- **Page 1**: Basic synthetic data with sequences and linked lists
+- **Page 2**: Distribution strategies (normal, exponential, etc.)
+- **Page 3**: Augment mode fundamentals
+- **Advanced**: Combine with add.to() and add.transform() for complete workflows

@@ -1,0 +1,352 @@
+---
+title: "add.transform() - Aggregation"
+---
+
+## Overview
+
+Learn how to group and aggregate data using `add.transform()`. Aggregation is essential for summarizing data, calculating statistics, and creating reports.
+
+**What you'll learn:**
+- How to group data by one or more columns
+- How to apply aggregation strategies (sum, mean, count, etc.)
+- How to aggregate multiple columns with different strategies
+- Best practices for data summarization
+
+**Prerequisites:**
+- [Calculations](examples-transform-01-calc.html) - Understanding of basic transform operations
+- [Filter & Sort](examples-transform-02-filter-sort.html) - Data selection and ordering
+- Basic understanding of grouping concepts
+
+---
+
+## Example 1: Group and Aggregate
+
+**Business Context:** You have sales data from multiple regions and want to see total sales by region.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Sales data
+df = pd.DataFrame({
+    'region': ['North', 'North', 'South', 'South', 'East'],
+    'product': ['Widget', 'Gadget', 'Widget', 'Gadget', 'Widget'],
+    'sales': [100, 150, 200, 250, 175]
+})
+
+# Group by region and sum sales
+result = add.transform(
+    '@aggregate',
+    df,
+    columns=['region', 'sales'],
+    by='region',
+    strategy={'sales': 'sum'}
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@aggregate', df, ['region', 'sales'], by='region', strategy={'sales': 'sum'})
+
+print(result)
+```
+
+**Output:**
+```
+  region  sales
+0   East    175
+1  North    250
+2  South    450
+```
+
+**Explanation:**
+- `'@aggregate'` mode groups and summarizes data
+- `columns` specifies which columns to include (grouping column + aggregated columns)
+- `by='region'` groups rows by the region column
+- `strategy={'sales': 'sum'}` sums sales values within each group
+- North: 100 + 150 = 250
+- South: 200 + 250 = 450
+- East: 175 (only one row)
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 2: Multiple Aggregations
+
+**Business Context:** You want to see average price and total quantity for each product category.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Product data
+df = pd.DataFrame({
+    'category': ['A', 'A', 'B', 'B', 'C'],
+    'price': [100, 150, 200, 250, 175],
+    'quantity': [10, 15, 20, 25, 30]
+})
+
+# Group by category with multiple aggregations
+result = add.transform(
+    '@aggregate',
+    df,
+    columns=['category', 'price', 'quantity'],
+    by='category',
+    strategy={'price': 'mean', 'quantity': 'sum'}
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@aggregate', df, ['category', 'price', 'quantity'], 
+#                        by='category', strategy={'price': 'mean', 'quantity': 'sum'})
+
+print(result)
+```
+
+**Output:**
+```
+  category  price  quantity
+0        A  125.0        25
+1        B  225.0        45
+2        C  175.0        30
+```
+
+**Explanation:**
+- Different aggregation strategies for different columns
+- `'price': 'mean'` calculates average price per category
+  - Category A: (100 + 150) / 2 = 125
+  - Category B: (200 + 250) / 2 = 225
+  - Category C: 175 (only one row)
+- `'quantity': 'sum'` sums quantities per category
+  - Category A: 10 + 15 = 25
+  - Category B: 20 + 25 = 45
+  - Category C: 30 (only one row)
+- Each column can have its own aggregation strategy
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 3: Group by Multiple Columns
+
+**Business Context:** You want to see total sales for each combination of region and product.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Sales data
+df = pd.DataFrame({
+    'region': ['North', 'North', 'South', 'South', 'North', 'South'],
+    'product': ['A', 'B', 'A', 'B', 'A', 'A'],
+    'sales': [100, 150, 200, 250, 120, 180]
+})
+
+# Group by region and product
+result = add.transform(
+    '@aggregate',
+    df,
+    columns=['region', 'product', 'sales'],
+    by=['region', 'product'],
+    strategy={'sales': 'sum'}
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@aggregate', df, ['region', 'product', 'sales'], 
+#                        by=['region', 'product'], strategy={'sales': 'sum'})
+
+print(result)
+```
+
+**Output:**
+```
+  region product  sales
+0  North       A    220
+1  North       B    150
+2  South       A    380
+3  South       B    250
+```
+
+**Explanation:**
+- `by=['region', 'product']` groups by multiple columns
+- Creates a group for each unique combination
+- North + A: 100 + 120 = 220 (2 rows combined)
+- North + B: 150 (1 row)
+- South + A: 200 + 180 = 380 (2 rows combined)
+- South + B: 250 (1 row)
+- Result has 4 rows (4 unique combinations)
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Aggregation Strategies
+
+### Available Strategies
+
+| Strategy | Description | Example Use Case |
+|----------|-------------|------------------|
+| `'sum'` | Add all values | Total sales, total quantity |
+| `'mean'` | Average of values | Average price, average rating |
+| `'count'` | Count of values | Number of transactions |
+| `'min'` | Minimum value | Lowest price, earliest date |
+| `'max'` | Maximum value | Highest price, latest date |
+| `'first'` | First value in group | Initial status |
+| `'last'` | Last value in group | Final status |
+
+### Strategy Examples
+
+```python
+# Sum - Total sales per region
+strategy={'sales': 'sum'}
+
+# Mean - Average price per category
+strategy={'price': 'mean'}
+
+# Count - Number of orders per customer
+strategy={'order_id': 'count'}
+
+# Min/Max - Price range per product
+strategy={'price_min': 'min', 'price_max': 'max'}
+
+# First/Last - Status tracking
+strategy={'initial_status': 'first', 'final_status': 'last'}
+```
+
+---
+
+## Common Patterns
+
+### Pattern 1: Sales Summary by Region
+```python
+result = add.transform('@aggregate', df, 
+                       columns=['region', 'sales'],
+                       by='region',
+                       strategy={'sales': 'sum'})
+```
+
+### Pattern 2: Customer Statistics
+```python
+result = add.transform('@aggregate', df,
+                       columns=['customer_id', 'order_count', 'total_spent'],
+                       by='customer_id',
+                       strategy={'order_count': 'count', 'total_spent': 'sum'})
+```
+
+### Pattern 3: Product Performance
+```python
+result = add.transform('@aggregate', df,
+                       columns=['product', 'avg_rating', 'review_count'],
+                       by='product',
+                       strategy={'avg_rating': 'mean', 'review_count': 'count'})
+```
+
+### Pattern 4: Time-Based Aggregation
+```python
+result = add.transform('@aggregate', df,
+                       columns=['date', 'region', 'daily_sales'],
+                       by=['date', 'region'],
+                       strategy={'daily_sales': 'sum'})
+```
+
+---
+
+## Best Practices
+
+1. **Include grouping columns in columns parameter**: Always list the columns you're grouping by
+   ```python
+   # Good
+   columns=['region', 'sales']  # Include 'region' (the grouping column)
+   by='region'
+   
+   # Will fail
+   columns=['sales']  # Missing 'region'
+   by='region'
+   ```
+
+2. **Choose appropriate aggregation strategies**: Match the strategy to your data type
+   ```python
+   # Good
+   strategy={'sales': 'sum'}  # Numeric data
+   strategy={'rating': 'mean'}  # Numeric data
+   strategy={'order_id': 'count'}  # Any data type
+   
+   # Less useful
+   strategy={'customer_name': 'sum'}  # Text data - doesn't make sense
+   ```
+
+3. **Use multiple strategies for comprehensive analysis**:
+   ```python
+   # Good: Multiple metrics
+   strategy={
+       'sales': 'sum',      # Total sales
+       'price': 'mean',     # Average price
+       'orders': 'count'    # Number of orders
+   }
+   ```
+
+4. **Group by meaningful dimensions**: Choose grouping columns that make business sense
+   ```python
+   # Good: Business dimensions
+   by='region'  # Geographic analysis
+   by='product_category'  # Product analysis
+   by=['date', 'store']  # Time and location analysis
+   ```
+
+5. **Verify your results**: Check that aggregated values make sense
+   ```python
+   # After aggregation, verify totals
+   print(f"Total sales: {result['sales'].sum()}")
+   print(f"Number of groups: {len(result)}")
+   ```
+
+---
+
+## Key Takeaways
+
+- Use `@aggregate` mode to group and summarize data
+- `by` parameter specifies grouping column(s)
+- `strategy` parameter defines how to aggregate each column
+- Multiple columns can have different aggregation strategies
+- Group by multiple columns for multi-dimensional analysis
+- Always include grouping columns in the `columns` parameter
+- Choose aggregation strategies that match your data type
+
+---
+
+## Common Questions
+
+**Q: Can I aggregate without grouping?**  
+A: Yes, omit the `by` parameter to aggregate the entire DataFrame into a single row.
+
+**Q: What happens if a group has only one row?**  
+A: The aggregation still works - sum/mean/etc. of one value is that value.
+
+**Q: Can I use different strategies for the same column?**  
+A: Not in a single operation. Run multiple aggregations and combine results.
+
+**Q: How do I count distinct values?**  
+A: Use `'count'` strategy, but note it counts all values, not distinct ones. For distinct counts, use pandas/polars native methods.
+
+**Q: Can I aggregate text columns?**  
+A: Yes, but only `'first'`, `'last'`, and `'count'` strategies make sense for text.
+
+**Q: What if my grouping column has null values?**  
+A: Null values are treated as a separate group.
+
+---
+
+## Next Steps
+
+- **[Advanced Modes](examples-transform-04-advanced-modes.html)** - Learn about @harmonize, @onehot, @extract, @deduce
+- **[Calculations](examples-transform-01-calc.html)** - Review calculation operations
+- **[API Reference](reference-transform.html)** - Complete `add.transform()` documentation
+
+---
+
+**Version:** 0.1.3  
+**Last Updated:** March 9, 2026

@@ -1,0 +1,142 @@
+# Introduction
+
+## What is Additory?
+
+Additory is a Rust-powered Python library designed to make data operations elegant, intuitive, and fast. It provides a unified API for common data tasks that work seamlessly with both Polars and Pandas DataFrames.
+
+## Philosophy
+
+Additory follows three core principles:
+
+1. **Simplicity** - Natural language function names and intuitive parameters
+2. **Performance** - Rust-powered core for blazing-fast operations
+3. **Flexibility** - Works with both Polars and Pandas, supports multiple modes
+
+## Core Functions
+
+Additory provides four main functions:
+
+### add.to()
+
+Add columns from external DataFrames with intelligent lookups and aggregation.
+
+```python
+import additory as add
+import polars as pl
+
+orders = pl.DataFrame({'id': [1, 2], 'customer_id': [101, 102]})
+customers = pl.DataFrame({'customer_id': [101, 102], 'name': ['Alice', 'Bob']})
+
+result = add.to(orders, bring_from=customers, bring=['name'], against='customer_id')
+```
+
+### add.transform()
+
+Transform data with mode-based operations: calculate, filter, sort, aggregate, and more.
+
+```python
+df = pl.DataFrame({'price': [100, 200, 300], 'quantity': [2, 3, 1]})
+
+# Calculate new columns
+result = add.transform('@calc', df, strategy={'total': 'price * quantity'})
+
+# Filter data
+result = add.transform('@filter', df, where='price > 150')
+
+# Aggregate data
+result = add.transform('@aggregate', df, by='category', strategy={'price': 'sum'})
+```
+
+### add.synthetic()
+
+Generate synthetic data for testing, ML training, or data augmentation.
+
+```python
+# Create synthetic DataFrame
+result = add.synthetic('@new', n=1000, strategy={
+    'age': 'normal(40, 10)',
+    'salary': 'normal(75000, 15000)',
+    'score': 'uniform(0, 100)'
+})
+
+# Augment existing data
+result = add.synthetic('@augment', df, n=100)
+```
+
+### add.scan()
+
+Analyze data quality and track lineage.
+
+```python
+# Analyze data
+result = add.scan('@analyze', df)
+
+# View lineage (requires lineage=True in operations)
+result = add.scan('@lineage', df)
+```
+
+## Key Features
+
+### Lineage Tracking
+
+Track data transformations across operations to understand data provenance.
+
+```python
+# Enable lineage tracking
+result = add.to(customers, bring_from=orders, bring=['amount'], 
+                against='customer_id', lineage=True)
+
+result = add.transform('@calc', result, strategy={'total': 'amount * 1.1'}, 
+                       lineage=True)
+
+# View lineage report
+lineage_report = add.scan('@lineage', result)
+```
+
+### Strategy Parameter
+
+Fine-grained control over operations with the `strategy` parameter.
+
+```python
+# Aggregation strategies in add.to()
+strategy={'amount': 'sum', 'date': 'last'}
+
+# Calculation strategies in add.transform()
+strategy={'total': 'price * quantity', 'discount': 'total * 0.1'}
+
+# Generation strategies in add.synthetic()
+strategy={'id': 'increment', 'age': 'normal(40, 10)'}
+```
+
+### Mode-Based Operations
+
+Use `@mode` syntax for different operation types:
+
+- `@calc` - Calculate new columns
+- `@filter` - Filter rows
+- `@sort` - Sort data
+- `@aggregate` - Group and aggregate
+- `@round` - Round numbers
+- `@transpose` - Transpose DataFrame
+- `@extract` - Extract patterns
+- `@onehotencode` - One-hot encoding
+- `@deduce` - Fill missing values
+- `@new` - Create synthetic data
+- `@augment` - Augment existing data
+- `@analyze` - Analyze data quality
+- `@lineage` - View lineage
+
+## Performance
+
+Additory is built with Rust (~95% of core operations) for optimal performance:
+
+- 3-5x faster transformations vs pure Python
+- 5-10x faster data joining operations
+- 10-20x faster synthetic data generation
+- Efficient memory usage with Arrow IPC serialization
+
+## Next Steps
+
+- **Installation** - Get started with installing additory
+- **Examples** - Explore comprehensive examples for each function
+- **API Reference** - Detailed documentation of all functions and parameters

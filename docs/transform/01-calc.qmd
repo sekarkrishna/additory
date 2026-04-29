@@ -1,0 +1,332 @@
+---
+title: "add.transform() - Calculations"
+---
+
+## Overview
+
+Learn how to create new columns using calculations with `add.transform()` in `@calc` mode. This is one of the most powerful features for deriving new insights from your data.
+
+**What you'll learn:**
+- How to perform simple calculations
+- How to create multiple calculated columns at once
+- How to use different arithmetic operations
+- Expression syntax and best practices
+
+**Prerequisites:**
+- Basic understanding of DataFrames (pandas or polars)
+- Familiarity with arithmetic operations
+
+---
+
+## Example 1: Simple Calculation
+
+**Business Context:** You have product inventory with prices and quantities. You need to calculate the total value of each product line.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Product inventory
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey'],
+    'price': [29.99, 49.99, 19.99],
+    'quantity': [10, 5, 15]
+})
+
+# Calculate total value
+result = add.transform(
+    '@calc',
+    df,
+    columns=['price', 'quantity'],
+    expression='price * quantity',
+    as_='total_value'
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@calc', df, ['price', 'quantity'], expression='price * quantity', as_='total_value')
+
+print(result)
+```
+
+**Output:**
+```
+      product  price  quantity  total_value
+0      Widget  29.99        10       299.90
+1      Gadget  49.99         5       249.95
+2  Doohickey  19.99        15       299.85
+```
+
+**Explanation:**
+- `'@calc'` mode creates new calculated columns
+- `columns` specifies which columns are used in the calculation
+- `expression` defines the calculation formula
+- `as_` names the new column
+- The calculation is applied to every row
+- Original columns are preserved
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 2: Multiple Calculations
+
+**Business Context:** You have product pricing data and need to calculate both profit and total value for each product.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Product data
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey'],
+    'price': [100, 200, 150],
+    'cost': [60, 120, 90],
+    'quantity': [10, 5, 15]
+})
+
+# Calculate profit and total value
+result = add.transform(
+    '@calc',
+    df,
+    columns=['price', 'cost', 'quantity'],
+    expression=['price - cost', 'price * quantity'],
+    as_=['profit', 'total_value']
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@calc', df, ['price', 'cost', 'quantity'], 
+#                        expression=['price - cost', 'price * quantity'], 
+#                        as_=['profit', 'total_value'])
+
+print(result)
+```
+
+**Output:**
+```
+      product  price  cost  quantity  profit  total_value
+0      Widget    100    60        10      40         1000
+1      Gadget    200   120         5      80         1000
+2  Doohickey    150    90        15      60         2250
+```
+
+**Explanation:**
+- Use lists for `expression` and `as_` to create multiple columns
+- Each expression creates one new column
+- The number of expressions must match the number of names in `as_`
+- All calculations happen in a single operation
+- More efficient than calling `add.transform()` multiple times
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 3: Division Operations
+
+**Business Context:** You need to calculate the price per unit for products sold in bulk.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Bulk products
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey'],
+    'price': [100, 200, 150],
+    'quantity': [3, 7, 5]
+})
+
+# Calculate price per unit
+result = add.transform(
+    '@calc',
+    df,
+    columns=['price', 'quantity'],
+    expression='price / quantity',
+    as_='price_per_unit'
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@calc', df, ['price', 'quantity'], 
+#                        expression='price / quantity', as_='price_per_unit')
+
+print(result)
+```
+
+**Output:**
+```
+      product  price  quantity  price_per_unit
+0      Widget    100         3       33.333333
+1      Gadget    200         7       28.571429
+2  Doohickey    150         5       30.000000
+```
+
+**Explanation:**
+- Division operations work just like multiplication
+- Results are floating-point numbers
+- Widget: 100 / 3 = 33.33...
+- Gadget: 200 / 7 = 28.57...
+- Doohickey: 150 / 5 = 30.00
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Supported Operations
+
+### Arithmetic Operators
+
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `+` | Addition | `price + tax` |
+| `-` | Subtraction | `price - discount` |
+| `*` | Multiplication | `price * quantity` |
+| `/` | Division | `total / count` |
+
+### Expression Syntax
+
+```python
+# Single column reference
+expression='price'
+
+# Binary operation
+expression='price * quantity'
+
+# Multiple operations (left to right)
+expression='price * quantity + tax'
+
+# Using multiple columns
+expression='a + b - c'
+```
+
+### Important Notes
+
+- Expressions are evaluated left to right
+- Column names must match exactly (case-sensitive)
+- All columns in the expression must be listed in `columns` parameter
+- Currently, parentheses for grouping are not supported
+- For complex calculations, break them into multiple steps
+
+---
+
+## Common Patterns
+
+### Pattern 1: Calculate Total
+```python
+result = add.transform('@calc', df, ['price', 'qty'], 
+                       expression='price * qty', as_='total')
+```
+
+### Pattern 2: Calculate Difference
+```python
+result = add.transform('@calc', df, ['actual', 'target'], 
+                       expression='actual - target', as_='variance')
+```
+
+### Pattern 3: Multiple Metrics
+```python
+result = add.transform('@calc', df, ['revenue', 'cost'], 
+                       expression=['revenue - cost', 'revenue / cost'],
+                       as_=['profit', 'margin_ratio'])
+```
+
+### Pattern 4: Chain Calculations
+```python
+# Step 1: Calculate profit
+df = add.transform('@calc', df, ['price', 'cost'], 
+                   expression='price - cost', as_='profit')
+
+# Step 2: Calculate profit margin using the new column
+df = add.transform('@calc', df, ['profit', 'price'], 
+                   expression='profit / price', as_='margin')
+```
+
+---
+
+## Best Practices
+
+1. **List all columns used**: Always include all columns referenced in your expression in the `columns` parameter
+
+2. **Use descriptive names**: Choose clear names for calculated columns
+   ```python
+   # Good
+   as_='total_revenue'
+   
+   # Avoid
+   as_='col1'
+   ```
+
+3. **Break complex calculations**: For readability, split complex calculations into steps
+   ```python
+   # Instead of one complex expression
+   # Do this:
+   df = add.transform('@calc', df, ['a', 'b'], expression='a + b', as_='sum')
+   df = add.transform('@calc', df, ['sum', 'c'], expression='sum * c', as_='result')
+   ```
+
+4. **Check for division by zero**: Validate your data before division operations
+   ```python
+   # Check for zeros first
+   if (df['quantity'] == 0).any():
+       print("Warning: Zero quantities found")
+   ```
+
+5. **Match expression and as_ lengths**: When using lists, ensure they have the same length
+   ```python
+   # Correct
+   expression=['a + b', 'a * b']
+   as_=['sum', 'product']
+   
+   # Wrong - will error
+   expression=['a + b', 'a * b']
+   as_=['sum']  # Missing second name
+   ```
+
+---
+
+## Key Takeaways
+
+- Use `@calc` mode to create calculated columns
+- Specify source columns in `columns` parameter
+- Define calculations in `expression` parameter
+- Name new columns with `as_` parameter
+- Use lists for multiple calculations
+- Supports basic arithmetic: +, -, *, /
+- Original columns are preserved
+- Works with both pandas and polars
+
+---
+
+## Common Questions
+
+**Q: Can I use parentheses in expressions?**  
+A: Currently, parentheses are not supported. Break complex calculations into multiple steps instead.
+
+**Q: Can I reference a calculated column in the same operation?**  
+A: No, you need to chain operations. Calculate the first column, then use it in a second `add.transform()` call.
+
+**Q: What happens if a column name doesn't exist?**  
+A: You'll get an error. Make sure all column names in your expression exist in the DataFrame.
+
+**Q: Can I use functions like sqrt() or abs()?**  
+A: Currently, only basic arithmetic operators are supported. Use pandas/polars functions for advanced operations.
+
+**Q: How do I handle null/NaN values?**  
+A: Calculations with NaN values will result in NaN. Filter or fill NaN values before calculating if needed.
+
+---
+
+## Next Steps
+
+- **[Filter & Sort](examples-transform-02-filter-sort.html)** - Learn to filter and sort data
+- **[add.to() Examples](examples-to-01-basic.html)** - Review data enrichment operations
+- **[API Reference](reference-transform.html)** - Complete `add.transform()` documentation
+
+---
+
+**Version:** 0.1.3  
+**Last Updated:** March 9, 2026

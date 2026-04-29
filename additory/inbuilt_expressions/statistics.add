@@ -1,0 +1,49 @@
+[z_score]
+expression = "(value - mean) / std_dev"
+description = "Z-score (standard score)"
+category = "statistics"
+
+[coefficient_of_variation]
+expression = "(std_dev / mean) * 100"
+description = "Coefficient of variation (CV%)"
+category = "statistics"
+
+[standard_error]
+expression = "std_dev / (count ** 0.5)"
+description = "Standard error of the mean"
+category = "statistics"
+
+[percent_error]
+expression = "((actual - expected) / expected) * 100"
+description = "Percent error"
+category = "statistics"
+
+[relative_error_pct]
+expression = "((actual - predicted) / actual) * 100"
+description = "Relative error percentage"
+category = "statistics"
+
+[slope]
+expression = "covariance / variance_x"
+description = "Slope of regression line"
+category = "statistics"
+
+[intercept]
+expression = "mean_y - slope * mean_x"
+description = "Intercept of regression line"
+category = "statistics"
+
+[predicted_value]
+expression = "intercept + slope * x"
+description = "Predicted value from linear regression"
+category = "statistics"
+
+[residual]
+expression = "actual - predicted"
+description = "Residual (prediction error)"
+category = "statistics"
+
+[r_squared]
+expression = "correlation ** 2"
+description = "Coefficient of determination (R-squared)"
+category = "statistics"

@@ -1,0 +1,189 @@
+# Installation
+
+## Quick Install
+
+Install additory from PyPI using pip:
+
+```bash
+pip install additory
+```
+
+## Requirements
+
+### Python Version
+
+- Python 3.9 or higher
+
+### Required Dependencies
+
+- **polars** >= 0.19.0 (required for internal operations)
+- **pyarrow** >= 10.0.0 (required for DataFrame conversions)
+
+### Optional Dependencies
+
+- **pandas** >= 1.5.0 (optional, for pandas DataFrame support)
+
+## Installation Options
+
+### Standard Installation
+
+For Polars-only usage:
+
+```bash
+pip install additory
+```
+
+### With Pandas Support
+
+To use additory with pandas DataFrames:
+
+```bash
+pip install additory[pandas]
+```
+
+### With All Optional Dependencies
+
+```bash
+pip install additory[all]
+```
+
+### Development Installation
+
+For development with testing tools:
+
+```bash
+pip install additory[dev]
+```
+
+## Building from Source
+
+If you want to build additory from source:
+
+### Prerequisites
+
+1. **Rust** - Install from [https://rustup.rs/](https://rustup.rs/)
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+2. **Maturin** - Python/Rust build tool
+
+```bash
+pip install maturin
+```
+
+### Build Steps
+
+```bash
+# Clone the repository
+git clone https://github.com/sekarkrishna/additory.git
+cd additory
+
+# Build the package
+export PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
+maturin build --release
+
+# Install locally
+pip install target/wheels/*.whl
+```
+
+## Verification
+
+Verify your installation:
+
+```python
+import additory as add
+print(add.__version__)
+```
+
+Expected output:
+```
+0.1.3a10
+```
+
+## Quick Test
+
+Run a quick test to ensure everything works:
+
+```python
+import additory as add
+import polars as pl
+
+# Test add.to()
+df1 = pl.DataFrame({'id': [1, 2], 'value': [10, 20]})
+df2 = pl.DataFrame({'id': [1, 2], 'name': ['A', 'B']})
+result = add.to(df1, bring_from=df2, bring=['name'], against='id')
+print("add.to() works:", result.shape)
+
+# Test add.transform()
+result = add.transform('@calc', df1, strategy={'doubled': 'value * 2'})
+print("add.transform() works:", result.shape)
+
+# Test add.synthetic()
+result = add.synthetic('@new', n=10, strategy={'x': 'normal(0, 1)'})
+print("add.synthetic() works:", result.shape)
+
+# Test add.scan()
+result = add.scan('@analyze', df1)
+print("add.scan() works")
+```
+
+## Troubleshooting
+
+### Python 3.13 Support
+
+If you're using Python 3.13, you may need to set an environment variable:
+
+```bash
+export PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
+pip install additory
+```
+
+### Import Errors
+
+If you encounter import errors:
+
+1. Ensure polars and pyarrow are installed:
+```bash
+pip install polars pyarrow
+```
+
+2. For pandas support:
+```bash
+pip install pandas
+```
+
+### Build Errors
+
+If building from source fails:
+
+1. Ensure Rust is properly installed:
+```bash
+rustc --version
+cargo --version
+```
+
+2. Update maturin:
+```bash
+pip install --upgrade maturin
+```
+
+3. Check for platform-specific issues in the [GitHub Issues](https://github.com/sekarkrishna/additory/issues)
+
+## Platform Support
+
+Additory is tested on:
+
+- **Linux** (x86_64, aarch64)
+- **macOS** (x86_64, Apple Silicon)
+- **Windows** (x86_64)
+
+## Next Steps
+
+Now that you have additory installed, explore the examples:
+
+- **add.to()** - Learn about data lookups and joins
+- **add.transform()** - Discover data transformation modes
+- **add.synthetic()** - Generate synthetic data
+- **add.scan()** - Analyze and inspect DataFrames

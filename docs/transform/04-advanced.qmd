@@ -1,0 +1,407 @@
+---
+title: "add.transform() - Advanced Modes"
+---
+
+## Overview
+
+Learn how to use advanced transformation modes with `add.transform()` for specialized data operations like encoding, feature extraction, and missing value imputation.
+
+**What you'll learn:**
+- How to one-hot encode categorical variables
+- How to extract datetime features automatically
+- How to impute missing values with different strategies
+- How to label encode categorical data
+
+**Prerequisites:**
+- Basic understanding of DataFrames (pandas or polars)
+- Familiarity with `add.transform()` basics
+
+---
+
+## Example 1: One-Hot Encoding
+
+**Business Context:** You have customer tier data (Gold, Silver, Bronze) and need to convert it to binary columns for machine learning models.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Customer data
+df = pd.DataFrame({
+    'customer': ['Alice', 'Bob', 'Charlie'],
+    'tier': ['Gold', 'Silver', 'Gold'],
+    'purchases': [10, 5, 8]
+})
+
+# One-hot encode tier column
+result = add.transform(
+    '@onehotencode',
+    df,
+    columns=['tier']
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@onehotencode', df, ['tier'])
+
+print(result)
+```
+
+**Output:**
+```
+  customer  tier  purchases  tier_Gold  tier_Silver
+0    Alice  Gold         10          1            0
+1      Bob Silver          5          0            1
+2  Charlie  Gold          8          1            0
+```
+
+**Explanation:**
+- `'@onehotencode'` mode creates binary columns for each unique value
+- Each unique value in the original column becomes a new column
+- Values are 1 if the row has that value, 0 otherwise
+- Original column is preserved
+- Also works with the alias `@onehot`
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 2: Extract Datetime Features
+
+**Business Context:** You have order dates as strings and need to extract month information for seasonal analysis.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Order data
+df = pd.DataFrame({
+    'order_id': [1, 2, 3],
+    'order_date': ['2024-01-15', '2024-02-20', '2024-03-10'],
+    'amount': [100, 200, 150]
+})
+
+# Extract datetime features
+result = add.transform(
+    '@extract',
+    df,
+    columns=['order_date'],
+    strategy={'features': ['year', 'month', 'day']}
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@extract', df, ['order_date'], 
+#                        strategy={'features': ['year', 'month', 'day']})
+
+print(result)
+```
+
+**Output:**
+```
+   order_id  order_date  amount  order_date_hour  order_date_month
+0         1  2024-01-15     100              NaN               1.0
+1         2  2024-02-20     200              NaN               2.0
+2         3  2024-03-10     150              NaN               3.0
+```
+
+**Explanation:**
+- `'@extract'` mode automatically extracts datetime features
+- Parses string dates and extracts components
+- Creates new columns with `_hour` and `_month` suffixes
+- Original column is preserved
+- Works with various date formats
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 3: Impute Missing Values
+
+**Business Context:** You have product data with some missing prices and stock levels. You need to fill these gaps with reasonable estimates.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Product data with missing values
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Doohickey', 'Thingamajig'],
+    'price': [29.99, None, 19.99, 39.99],
+    'stock': [10, 5, None, 15]
+})
+
+# Impute missing values with mean
+result = add.transform(
+    '@deduce',
+    df,
+    columns=['price', 'stock'],
+    strategy={'method': 'mean'}
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@deduce', df, ['price', 'stock'], 
+#                        strategy={'method': 'mean'})
+
+print(result)
+```
+
+**Output:**
+```
+       product  price  stock
+0       Widget  29.99   10.0
+1       Gadget  29.99    5.0
+2    Doohickey  19.99   10.0
+3  Thingamajig  39.99   15.0
+```
+
+**Explanation:**
+- `'@deduce'` mode fills missing values using various strategies
+- `method='mean'` uses the average of non-null values
+- Missing price (Gadget) filled with mean: (29.99 + 19.99 + 39.99) / 3 = 29.99
+- Missing stock (Doohickey) filled with mean: (10 + 5 + 15) / 3 = 10.0
+- Original columns are updated with imputed values
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Example 4: Label Encoding
+
+**Business Context:** You have categorical product categories and need to convert them to numeric labels for analysis.
+
+**Code:**
+
+```python
+import additory as add
+import pandas as pd
+
+# Product data
+df = pd.DataFrame({
+    'product': ['Widget', 'Gadget', 'Widget', 'Doohickey', 'Gadget'],
+    'category': ['Electronics', 'Electronics', 'Electronics', 'Tools', 'Electronics'],
+    'sales': [100, 150, 120, 80, 200]
+})
+
+# Label encode category column
+result = add.transform(
+    '@label',
+    df,
+    columns=['category'],
+    strategy={'bins': [0, 1, 2], 'labels': ['Electronics', 'Tools']}
+)
+
+# Positional parameters (also works without naming certain parameters):
+# result = add.transform('@label', df, ['category'], 
+#                        strategy={'bins': [0, 1, 2], 'labels': ['Electronics', 'Tools']})
+
+print(result)
+```
+
+**Output:**
+```
+     product     category  sales category_labeled
+0     Widget  Electronics    100      Electronics
+1     Gadget  Electronics    150      Electronics
+2     Widget  Electronics    120      Electronics
+3  Doohickey        Tools     80            Tools
+4     Gadget  Electronics    200      Electronics
+```
+
+**Explanation:**
+- `'@label'` mode creates labeled categories
+- `bins` defines the numeric ranges
+- `labels` defines the category names
+- Creates a new column with `_labeled` suffix
+- Original column is preserved
+
+**Note:** This also works with polars DataFrames.
+
+---
+
+## Available Advanced Modes
+
+### Encoding Modes
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `@onehotencode` | Convert categorical to binary columns | ML feature preparation |
+| `@onehot` | Alias for `@onehotencode` | Same as above |
+| `@label` | Create labeled categories | Categorical binning |
+
+### Feature Extraction
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `@extract` | Extract datetime/text features | Feature engineering |
+| `@datetime` | Parse datetime strings | Date parsing (merged into @extract) |
+
+### Data Cleaning
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `@deduce` | Impute missing values | Data cleaning |
+| `@harmonize` | Convert measurement units | Unit standardization |
+| `@round` | Round numeric values | Number formatting |
+
+### Data Reshaping
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `@transpose` | Transpose DataFrame | Pivot data structure |
+| `@split` | Split text columns | Text parsing |
+
+---
+
+## Imputation Methods (@deduce)
+
+The `@deduce` mode supports multiple imputation strategies:
+
+```python
+# Mean imputation (default)
+result = add.transform('@deduce', df, ['column'], strategy={'method': 'mean'})
+
+# Median imputation
+result = add.transform('@deduce', df, ['column'], strategy={'method': 'median'})
+
+# Mode imputation (most frequent)
+result = add.transform('@deduce', df, ['column'], strategy={'method': 'mode'})
+
+# Forward fill
+result = add.transform('@deduce', df, ['column'], strategy={'method': 'forward'})
+
+# Backward fill
+result = add.transform('@deduce', df, ['column'], strategy={'method': 'backward'})
+
+# K-Nearest Neighbors
+result = add.transform('@deduce', df, ['column'], strategy={'method': 'knn'})
+
+# Auto (automatically choose best method)
+result = add.transform('@deduce', df, ['column'], strategy={'method': 'auto'})
+```
+
+---
+
+## Common Patterns
+
+### Pattern 1: Prepare ML Features
+```python
+# One-hot encode categorical variables
+df = add.transform('@onehotencode', df, ['category', 'region'])
+
+# Extract datetime features
+df = add.transform('@extract', df, ['date_column'])
+
+# Impute missing values
+df = add.transform('@deduce', df, ['numeric_col'], strategy={'method': 'mean'})
+```
+
+### Pattern 2: Clean Data Pipeline
+```python
+# Step 1: Impute missing values
+df = add.transform('@deduce', df, ['price', 'quantity'], strategy={'method': 'mean'})
+
+# Step 2: Harmonize units
+df = add.transform('@harmonize', df, ['weight'], strategy={'to_unit': 'kg'})
+
+# Step 3: Round values
+df = add.transform('@round', df, ['price'], strategy={'decimals': 2})
+```
+
+### Pattern 3: Feature Engineering
+```python
+# Extract datetime features
+df = add.transform('@extract', df, ['order_date'])
+
+# One-hot encode categories
+df = add.transform('@onehotencode', df, ['customer_tier'])
+
+# Now ready for ML model
+```
+
+---
+
+## Best Practices
+
+1. **Check data types**: Ensure columns have appropriate types before transformation
+   ```python
+   # Check types
+   print(df.dtypes)
+   
+   # Convert if needed
+   df['date'] = pd.to_datetime(df['date'])
+   ```
+
+2. **Handle missing values strategically**: Choose imputation method based on data distribution
+   ```python
+   # Use median for skewed data
+   strategy={'method': 'median'}
+   
+   # Use mode for categorical
+   strategy={'method': 'mode'}
+   ```
+
+3. **Validate one-hot encoding**: Check unique values before encoding
+   ```python
+   # Check unique values
+   print(df['category'].unique())
+   
+   # Then encode
+   result = add.transform('@onehotencode', df, ['category'])
+   ```
+
+4. **Test on sample data**: Try advanced modes on a small sample first
+   ```python
+   # Test on first 10 rows
+   sample = df.head(10)
+   result = add.transform('@deduce', sample, ['price'], strategy={'method': 'mean'})
+   ```
+
+---
+
+## Key Takeaways
+
+- Advanced modes provide specialized transformations
+- `@onehotencode` creates binary columns for categorical data
+- `@extract` automatically extracts datetime features
+- `@deduce` offers 7 different imputation methods
+- `@label` creates labeled categories
+- All modes preserve original columns
+- Works with both pandas and polars
+- Use `strategy` parameter for mode-specific options
+
+---
+
+## Common Questions
+
+**Q: Which imputation method should I use?**  
+A: Use `mean` for normally distributed data, `median` for skewed data, `mode` for categorical, and `forward`/`backward` for time series.
+
+**Q: Does @onehotencode handle new categories?**  
+A: It creates columns for categories present in the data. New categories in future data won't have columns.
+
+**Q: Can I extract specific datetime features?**  
+A: The `@extract` mode automatically extracts available features. Use the `strategy` parameter to specify which features you want.
+
+**Q: What happens to the original column after encoding?**  
+A: The original column is preserved. New columns are added with appropriate suffixes.
+
+**Q: Can I chain multiple advanced modes?**  
+A: Yes! You can chain any modes together. Just call `add.transform()` multiple times.
+
+---
+
+## Next Steps
+
+- **[Real-World Workflows](examples-transform-05-real-world.html)** - See complete transformation pipelines
+- **[Calculations](examples-transform-01-calc.html)** - Review calculation basics
+- **[API Reference](reference-transform.html)** - Complete `add.transform()` documentation
+
+---
+
+**Version:** 0.1.3  
+**Last Updated:** March 9, 2026

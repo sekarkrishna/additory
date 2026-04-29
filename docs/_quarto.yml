@@ -1,0 +1,93 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "Additory Documentation"
+  subtitle: "Elegant data operations for DataFrames"
+  author: "Krishnamoorthy Sankaran"
+  date: today
+  repo-url: https://github.com/sekarkrishna/additory
+  repo-actions: [edit, issue]
+  downloads: [pdf, epub]
+  sharing: [twitter, facebook, linkedin]
+  
+  page-navigation: true
+  search: true
+  
+  sidebar:
+    style: "docked"
+    background: light
+    
+  chapters:
+    - index.qmd
+    
+    - part: "Getting Started"
+      chapters:
+        - intro.qmd
+        - installation.qmd
+    
+    - part: "add.to() - Data Lookups & Joins"
+      chapters:
+        - to/01-basic.qmd
+        - to/02-multiple.qmd
+        - to/03-patterns.qmd
+        - to/04-strategy.qmd
+        - to/05-real-world.qmd
+    
+    - part: "add.transform() - Data Transformations"
+      chapters:
+        - transform/01-calc.qmd
+        - transform/02-filter-sort.qmd
+        - transform/03-aggregate.qmd
+        - transform/04-advanced.qmd
+        - transform/05-real-world.qmd
+    
+    - part: "add.synthetic() - Synthetic Data"
+      chapters:
+        - synthetic/01-basic.qmd
+        - synthetic/02-distributions.qmd
+        - synthetic/03-augment.qmd
+        - synthetic/04-real-world.qmd
+    
+    - part: "add.scan() - Data Analysis"
+      chapters:
+        - scan/01-basic.qmd
+        - scan/02-lineage.qmd
+        - scan/03-real-world.qmd
+    
+    - part: "Lineage Tracking"
+      chapters:
+        - lineage/01-basics.qmd
+        - lineage/02-advanced.qmd
+    
+    - part: "Guides & Troubleshooting"
+      chapters:
+        - guides/troubleshooting.qmd
+    
+    - references.qmd
+
+bibliography: references.bib
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-copy: true
+    code-fold: false
+    code-tools: true
+    code-link: true
+    highlight-style: github
+    fig-width: 8
+    fig-height: 6
+    
+  pdf:
+    documentclass: scrbook
+    toc: true
+    number-sections: true
+    colorlinks: true
+
+editor: visual

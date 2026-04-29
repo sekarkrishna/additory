@@ -1,0 +1,52 @@
+[bmi]
+expression = "weight / (height ** 2)"
+description = "Body Mass Index - weight in kg, height in meters"
+category = "core"
+
+[bmi.inputs]
+weight = { type = "numeric", unit = "kg", description = "Body weight" }
+height = { type = "numeric", unit = "m", description = "Height" }
+
+[bsa_mosteller]
+expression = "0.007184 * (height ** 0.725) * (weight ** 0.425)"
+description = "Body Surface Area (Mosteller formula) - height in cm, weight in kg"
+category = "core"
+
+[bsa_mosteller.inputs]
+height = { type = "numeric", unit = "cm", description = "Height" }
+weight = { type = "numeric", unit = "kg", description = "Body weight" }
+
+[age_years]
+expression = "(today() - birth_date).days / 365.25"
+description = "Calculate age in years from birth date"
+category = "core"
+
+[age_from_dob]
+expression = "(today() - date_of_birth).days / 365.25"
+description = "Calculate age in years from date_of_birth column"
+category = "core"
+
+[profit]
+expression = "revenue - cost"
+description = "Calculate profit from revenue and cost"
+category = "core"
+
+[profit_margin_pct]
+expression = "(revenue - cost) / revenue * 100"
+description = "Calculate profit margin percentage"
+category = "core"
+
+[total_price]
+expression = "price * quantity"
+description = "Calculate total price from unit price and quantity"
+category = "core"
+
+[discount_amount]
+expression = "price * discount_rate"
+description = "Calculate discount amount from price and discount rate (0-1)"
+category = "core"
+
+[net_price]
+expression = "price - (price * discount_rate)"
+description = "Calculate net price after discount"
+category = "core"

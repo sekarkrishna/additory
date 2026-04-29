@@ -1,0 +1,217 @@
+# Basic Synthetic Data Generation
+
+Generate synthetic data from scratch using the `@new` mode.
+
+## Example 1: Create Synthetic DataFrame
+
+Create a synthetic DataFrame with multiple column types - sequences, distributions, and categorical values.
+
+```python
+import pandas as pd
+import additory as add
+
+result = add.synthetic(
+    '@new',                    # Mode: create from scratch
+    n=5,                       # Number of rows to generate
+    strategy={
+        'id': {'type': 'sequence', 'start': 1, 'step': 1},
+        'age': {'distribution': 'uniform', 'min': 18, 'max': 65},
+        'status': {'values': ['active', 'inactive', 'pending']}
+    },
+    seed=42                    # For reproducible results
+)
+
+print(result)
+```
+
+Output:
+```
+   id        age    status
+0   1  42.748198  inactive
+1   2  43.508085  inactive
+2   3  47.913860  inactive
+3   4  37.077383    active
+4   5  19.614112  inactive
+```
+
+**Key Points:**
+- `@new` mode creates a DataFrame from scratch (no input DataFrame needed)
+- `n` parameter specifies the number of rows
+- `seed` parameter ensures reproducible results
+- Mix different strategies for different columns
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Example 2: Linked Lists - Symptoms and Medications
+
+Linked lists ensure realistic combinations by maintaining valid relationships between values. Perfect for symptoms→medications, products→categories, or any hierarchical data.
+
+```python
+import pandas as pd
+import additory as add
+
+result = add.synthetic(
+    '@new',
+    n=6,
+    strategy={
+        'patient_id': {'type': 'sequence', 'start': 1, 'step': 1},
+        'symptom': {
+            'type': 'linked_list',
+            'levels': [
+                ['Headache', 'Headache', 'Nausea', 'Nausea', 'Fever', 'Fever'],
+                ['Ibuprofen', 'Acetaminophen', 'Ondansetron', 'Ginger', 'Aspirin', 'Paracetamol']
+            ]
+        }
+    },
+    seed=42
+)
+
+print(result)
+```
+
+Output:
+```
+   patient_id                symptom
+0           1          Nausea Ginger
+1           2          Nausea Ginger
+2           3    Nausea Ondansetron
+3           4     Headache Ibuprofen
+4           5    Nausea Ondansetron
+5           6          Fever Aspirin
+```
+
+**How Linked Lists Work:**
+- Each level is a list of values with the same length
+- Values at the same index across levels form valid combinations
+- Index 0: Headache → Ibuprofen
+- Index 1: Headache → Acetaminophen
+- Index 2: Nausea → Ondansetron
+- Index 3: Nausea → Ginger
+- Index 4: Fever → Aspirin
+- Index 5: Fever → Paracetamol
+
+**Why This is Powerful:**
+- Ensures only valid combinations (no "Headache → Aspirin" if not in your list)
+- Simple to define - just list valid combinations at matching indices
+- Generates realistic test data automatically
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Example 3: Linked Lists - Geographic Hierarchy
+
+Linked lists work with any number of levels. Here's a 3-level example showing country→state→city relationships, including cities with the same name in different locations (Salem appears in both USA and India).
+
+```python
+import pandas as pd
+import additory as add
+
+result = add.synthetic(
+    '@new',
+    n=6,
+    strategy={
+        'location_id': {'type': 'sequence', 'start': 1, 'step': 1},
+        'location': {
+            'type': 'linked_list',
+            'levels': [
+                ['USA', 'USA', 'USA', 'India', 'India', 'India'],
+                ['Oregon', 'Massachusetts', 'Virginia', 'TamilNadu', 'Karnataka', 'UttarPradesh'],
+                ['Salem', 'Salem', 'Salem', 'Salem', 'Bangalore', 'Lucknow']
+            ]
+        }
+    },
+    seed=42
+)
+
+print(result)
+```
+
+Output:
+```
+   location_id                    location
+0            1      India TamilNadu Salem
+1            2      India TamilNadu Salem
+2            3          USA Virginia Salem
+3            4            USA Oregon Salem
+4            5          USA Virginia Salem
+5            6  India Karnataka Bangalore
+```
+
+**Valid Combinations:**
+- USA → Oregon → Salem
+- USA → Massachusetts → Salem
+- USA → Virginia → Salem
+- India → TamilNadu → Salem
+- India → Karnataka → Bangalore
+- India → UttarPradesh → Lucknow
+
+**Key Insight:**
+Salem appears 4 times in the levels (indices 0-3), but each Salem is correctly paired with its country and state. This demonstrates how linked lists handle ambiguous values by maintaining the full context.
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Strategy Types
+
+### Sequence
+```python
+{'type': 'sequence', 'start': 1, 'step': 1}
+```
+Generates sequential integers: 1, 2, 3, 4, ...
+
+### Uniform Distribution
+```python
+{'distribution': 'uniform', 'min': 18, 'max': 65}
+```
+Generates random numbers uniformly distributed between min and max.
+
+### Categorical
+```python
+{'values': ['active', 'inactive', 'pending']}
+```
+Randomly selects from the provided list of values.
+
+### Linked List
+```python
+{
+    'type': 'linked_list',
+    'levels': [
+        ['Level1_Value1', 'Level1_Value2', ...],
+        ['Level2_Value1', 'Level2_Value2', ...],
+        ...
+    ]
+}
+```
+Maintains valid relationships between hierarchical values. All levels must have the same length.
+
+---
+
+## Parameters
+
+### Required Parameters
+- `mode`: `'@new'` to create from scratch
+- `n`: Number of rows to generate
+- `strategy`: Dictionary mapping column names to generation strategies
+
+### Optional Parameters
+- `seed`: Random seed for reproducibility (default: 42)
+- `logging`: Enable detailed logging (default: False)
+- `as_type`: Force output type (`'pandas'` or `'polars'`)
+
+### Positional Parameters
+```python
+# Also works without naming certain parameters:
+result = add.synthetic('@new', n=100, strategy={...}, seed=42)
+```
+
+---
+
+## Next Steps
+
+- **Page 2**: More distribution strategies (normal, lognormal, exponential, etc.)
+- **Page 3**: Augment mode - add synthetic rows to existing DataFrames
+- **Page 4**: Real-world scenarios and advanced patterns

@@ -1,0 +1,35 @@
+# Rust build artifacts
+target/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.so
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+
+# MkDocs build output
+docs-mkdocs/site/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pytest
+.pytest_cache/
+
+# Environment
+.env

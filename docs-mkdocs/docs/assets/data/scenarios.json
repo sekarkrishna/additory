@@ -1,0 +1,257 @@
+{
+  "scenarios": [
+    {
+      "id": "healthcare",
+      "name": "Healthcare / Clinical",
+      "target": {
+        "name": "patients",
+        "columns": {
+          "id": "patient_id",
+          "key": "doctor_id",
+          "value1": "diagnosis",
+          "value2": "ward"
+        },
+        "rows": [
+          {"id": 1001, "key": 201, "value1": "Hypertension", "value2": "Cardiology"},
+          {"id": 1002, "key": 202, "value1": "Fracture", "value2": "Orthopedics"},
+          {"id": 1003, "key": 203, "value1": "Asthma", "value2": "Pulmonology"}
+        ]
+      },
+      "reference": {
+        "name": "doctors",
+        "columns": {
+          "key": "doctor_id",
+          "lookup1": "name",
+          "lookup2": "specialty"
+        },
+        "rows": [
+          {"key": 201, "lookup1": "Dr. Priya Sharma", "lookup2": "Cardiology"},
+          {"key": 202, "lookup1": "Dr. Kenji Tanaka", "lookup2": "Orthopedics"},
+          {"key": 203, "lookup1": "Dr. Amara Osei", "lookup2": "Pulmonology"}
+        ]
+      }
+    },
+    {
+      "id": "finance",
+      "name": "Finance / Banking",
+      "target": {
+        "name": "transactions",
+        "columns": {
+          "id": "txn_id",
+          "key": "account_id",
+          "value1": "amount",
+          "value2": "currency"
+        },
+        "rows": [
+          {"id": "TXN-5001", "key": "ACC-301", "value1": 2500.00, "value2": "USD"},
+          {"id": "TXN-5002", "key": "ACC-302", "value1": 18750.50, "value2": "EUR"},
+          {"id": "TXN-5003", "key": "ACC-303", "value1": 430.25, "value2": "GBP"},
+          {"id": "TXN-5004", "key": "ACC-301", "value1": 1200.00, "value2": "USD"}
+        ]
+      },
+      "reference": {
+        "name": "accounts",
+        "columns": {
+          "key": "account_id",
+          "lookup1": "holder",
+          "lookup2": "branch"
+        },
+        "rows": [
+          {"key": "ACC-301", "lookup1": "Lena Johansson", "lookup2": "Stockholm Main"},
+          {"key": "ACC-302", "lookup1": "Marco Bianchi", "lookup2": "Milan Central"},
+          {"key": "ACC-303", "lookup1": "Fatima Al-Rashid", "lookup2": "London City"}
+        ]
+      }
+    },
+    {
+      "id": "retail",
+      "name": "Retail / E-commerce",
+      "target": {
+        "name": "orders",
+        "columns": {
+          "id": "order_id",
+          "key": "product_id",
+          "value1": "quantity",
+          "value2": "status"
+        },
+        "rows": [
+          {"id": "ORD-7001", "key": "SKU-401", "value1": 2, "value2": "shipped"},
+          {"id": "ORD-7002", "key": "SKU-402", "value1": 1, "value2": "delivered"},
+          {"id": "ORD-7003", "key": "SKU-403", "value1": 5, "value2": "processing"},
+          {"id": "ORD-7004", "key": "SKU-401", "value1": 3, "value2": "shipped"}
+        ]
+      },
+      "reference": {
+        "name": "products",
+        "columns": {
+          "key": "product_id",
+          "lookup1": "name",
+          "lookup2": "category"
+        },
+        "rows": [
+          {"key": "SKU-401", "lookup1": "Wireless Headphones", "lookup2": "Electronics"},
+          {"key": "SKU-402", "lookup1": "Running Shoes", "lookup2": "Footwear"},
+          {"key": "SKU-403", "lookup1": "Ceramic Mug Set", "lookup2": "Kitchen"}
+        ]
+      }
+    },
+    {
+      "id": "education",
+      "name": "Education / University",
+      "target": {
+        "name": "enrollments",
+        "columns": {
+          "id": "student_id",
+          "key": "course_id",
+          "value1": "grade",
+          "value2": "semester"
+        },
+        "rows": [
+          {"id": "STU-2001", "key": "CS101", "value1": "A", "value2": "Fall 2025"},
+          {"id": "STU-2002", "key": "MATH201", "value1": "B+", "value2": "Fall 2025"},
+          {"id": "STU-2003", "key": "ENG110", "value1": "A-", "value2": "Fall 2025"}
+        ]
+      },
+      "reference": {
+        "name": "courses",
+        "columns": {
+          "key": "course_id",
+          "lookup1": "professor",
+          "lookup2": "department"
+        },
+        "rows": [
+          {"key": "CS101", "lookup1": "Prof. Ada Lovelace", "lookup2": "Computer Science"},
+          {"key": "MATH201", "lookup1": "Prof. Srinivasa Rao", "lookup2": "Mathematics"},
+          {"key": "ENG110", "lookup1": "Prof. James Baldwin", "lookup2": "English"}
+        ]
+      }
+    },
+    {
+      "id": "sports",
+      "name": "Sports / Athletics",
+      "target": {
+        "name": "matches",
+        "columns": {
+          "id": "match_id",
+          "key": "team_id",
+          "value1": "score",
+          "value2": "venue"
+        },
+        "rows": [
+          {"id": "M-3001", "key": "T-10", "value1": 3, "value2": "National Stadium"},
+          {"id": "M-3002", "key": "T-11", "value1": 1, "value2": "City Arena"},
+          {"id": "M-3003", "key": "T-12", "value1": 2, "value2": "Olympic Park"},
+          {"id": "M-3004", "key": "T-10", "value1": 4, "value2": "City Arena"}
+        ]
+      },
+      "reference": {
+        "name": "teams",
+        "columns": {
+          "key": "team_id",
+          "lookup1": "coach",
+          "lookup2": "league"
+        },
+        "rows": [
+          {"key": "T-10", "lookup1": "Maria Santos", "lookup2": "Premier League"},
+          {"key": "T-11", "lookup1": "Yuki Nakamura", "lookup2": "Serie A"},
+          {"key": "T-12", "lookup1": "Oluwaseun Adeyemi", "lookup2": "Bundesliga"}
+        ]
+      }
+    },
+    {
+      "id": "food",
+      "name": "Food / Restaurant",
+      "target": {
+        "name": "orders",
+        "columns": {
+          "id": "order_id",
+          "key": "dish_id",
+          "value1": "quantity",
+          "value2": "table_no"
+        },
+        "rows": [
+          {"id": 8001, "key": "D-50", "value1": 2, "value2": 5},
+          {"id": 8002, "key": "D-51", "value1": 1, "value2": 12},
+          {"id": 8003, "key": "D-52", "value1": 3, "value2": 5}
+        ]
+      },
+      "reference": {
+        "name": "dishes",
+        "columns": {
+          "key": "dish_id",
+          "lookup1": "dish_name",
+          "lookup2": "chef"
+        },
+        "rows": [
+          {"key": "D-50", "lookup1": "Masala Dosa", "lookup2": "Chef Ananya"},
+          {"key": "D-51", "lookup1": "Pad Thai", "lookup2": "Chef Somchai"},
+          {"key": "D-52", "lookup1": "Tacos al Pastor", "lookup2": "Chef Rosa"}
+        ]
+      }
+    },
+    {
+      "id": "hr",
+      "name": "HR / Workforce",
+      "target": {
+        "name": "employees",
+        "columns": {
+          "id": "emp_id",
+          "key": "dept_id",
+          "value1": "role",
+          "value2": "hire_year"
+        },
+        "rows": [
+          {"id": "E-4001", "key": "D-10", "value1": "Engineer", "value2": 2022},
+          {"id": "E-4002", "key": "D-11", "value1": "Analyst", "value2": 2023},
+          {"id": "E-4003", "key": "D-12", "value1": "Designer", "value2": 2021},
+          {"id": "E-4004", "key": "D-10", "value1": "Lead Engineer", "value2": 2019}
+        ]
+      },
+      "reference": {
+        "name": "departments",
+        "columns": {
+          "key": "dept_id",
+          "lookup1": "manager",
+          "lookup2": "location"
+        },
+        "rows": [
+          {"key": "D-10", "lookup1": "Ingrid Bergström", "lookup2": "Stockholm"},
+          {"key": "D-11", "lookup1": "Raj Patel", "lookup2": "Mumbai"},
+          {"key": "D-12", "lookup1": "Chen Wei", "lookup2": "Shanghai"}
+        ]
+      }
+    },
+    {
+      "id": "logistics",
+      "name": "Logistics / Shipping",
+      "target": {
+        "name": "shipments",
+        "columns": {
+          "id": "tracking_id",
+          "key": "warehouse_id",
+          "value1": "weight_kg",
+          "value2": "destination"
+        },
+        "rows": [
+          {"id": "SHP-9001", "key": "WH-01", "value1": 12.5, "value2": "Berlin"},
+          {"id": "SHP-9002", "key": "WH-02", "value1": 45.0, "value2": "Tokyo"},
+          {"id": "SHP-9003", "key": "WH-03", "value1": 8.3, "value2": "São Paulo"},
+          {"id": "SHP-9004", "key": "WH-01", "value1": 22.1, "value2": "Lagos"}
+        ]
+      },
+      "reference": {
+        "name": "warehouses",
+        "columns": {
+          "key": "warehouse_id",
+          "lookup1": "manager",
+          "lookup2": "region"
+        },
+        "rows": [
+          {"key": "WH-01", "lookup1": "Erik Lindqvist", "lookup2": "Northern Europe"},
+          {"key": "WH-02", "lookup1": "Haruki Mori", "lookup2": "East Asia"},
+          {"key": "WH-03", "lookup1": "Ana Oliveira", "lookup2": "South America"}
+        ]
+      }
+    }
+  ]
+}

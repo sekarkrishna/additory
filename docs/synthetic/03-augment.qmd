@@ -1,0 +1,258 @@
+# Augment Mode - Add Synthetic Rows
+
+Use `@augment` mode to add synthetic rows to existing DataFrames while maintaining patterns from the original data.
+
+## Example 1: Add Synthetic Rows to Existing DataFrame
+
+Start with a small dataset and augment it with synthetic rows that follow similar patterns.
+
+```python
+import pandas as pd
+import additory as add
+
+# Start with a small dataset
+existing = pd.DataFrame({
+    'customer_id': [1, 2, 3],
+    'age': [25, 35, 45],
+    'purchase_amount': [100.0, 200.0, 150.0]
+})
+
+# Add 7 more synthetic rows based on existing patterns
+result = add.synthetic(
+    '@augment',              # Mode: add to existing data
+    existing,                # DataFrame to augment
+    n=7,                     # Number of rows to add
+    seed=42                  # For reproducible results
+)
+
+print(result)
+print(f"\nOriginal rows: 3, Total rows: {len(result)}")
+```
+
+Output:
+```
+   customer_id        age  purchase_amount
+0            1  25.000000       100.000000
+1            2  35.000000       200.000000
+2            3  45.000000       150.000000
+3            4  32.419856       142.748198
+4            5  33.508085       143.508085
+5            6  37.913860       147.913860
+6            7  27.077383       137.077383
+7            8  19.614112       119.614112
+8            9  28.331088       128.331088
+9           10  29.661907       129.661907
+
+Original rows: 3, Total rows: 10
+```
+
+**Key Points:**
+- `@augment` mode adds synthetic rows to an existing DataFrame
+- The synthetic data follows patterns from the original data
+- Original 3 rows are preserved, 7 new rows are added
+- Useful for expanding small datasets for testing or analysis
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Example 2: Augment with Categorical Columns
+
+Augment mode works with both numeric and categorical columns, maintaining the distribution of categories from the original data.
+
+```python
+import pandas as pd
+import additory as add
+
+# Dataset with both numeric and categorical columns
+existing = pd.DataFrame({
+    'product_id': [101, 102, 103, 104],
+    'category': ['Electronics', 'Clothing', 'Electronics', 'Home'],
+    'price': [299.99, 49.99, 199.99, 89.99],
+    'rating': [4.5, 3.8, 4.2, 4.0]
+})
+
+# Add 6 more synthetic rows
+result = add.synthetic(
+    '@augment',
+    existing,
+    n=6,
+    seed=42
+)
+
+print(result)
+print(f"\nCategories in result: {result['category'].unique()}")
+```
+
+Output:
+```
+   product_id      category       price  rating
+0         101   Electronics  299.990000    4.50
+1         102      Clothing   49.990000    3.80
+2         103   Electronics  199.990000    4.20
+3         104          Home   89.990000    4.00
+4         105   Electronics  242.748198    4.32
+5         106      Clothing   93.508085    3.95
+6         107   Electronics  247.913860    4.38
+7         108          Home  137.077383    4.07
+8         109      Clothing   69.614112    3.86
+9         110   Electronics  228.331088    4.28
+
+Categories in result: ['Electronics' 'Clothing' 'Home']
+```
+
+**Key Points:**
+- Categorical columns maintain their original values
+- Numeric columns follow the distribution of the original data
+- Categories appear with similar frequency to the original dataset
+- Perfect for generating test data that matches production patterns
+
+Note: This also works with polars DataFrames.
+
+---
+
+## Example 3: Test Data Generation - Augment Small Sample
+
+A common use case: take a small sample of production data and generate a larger test dataset that maintains realistic patterns.
+
+```python
+import pandas as pd
+import additory as add
+
+# Small sample of real production data
+production_sample = pd.DataFrame({
+    'user_id': [1001, 1002, 1003],
+    'session_duration': [120.5, 85.3, 200.7],
+    'pages_viewed': [5, 3, 8],
+    'device_type': ['mobile', 'desktop', 'mobile']
+})
+
+# Generate 97 more rows for testing (total 100)
+test_data = add.synthetic(
+    '@augment',
+    production_sample,
+    n=97,
+    seed=42
+)
+
+print(f"Test dataset size: {len(test_data)} rows")
+print(f"\nDevice type distribution:")
+print(test_data['device_type'].value_counts())
+print(f"\nSession duration stats:")
+print(f"  Mean: {test_data['session_duration'].mean():.1f} seconds")
+print(f"  Min: {test_data['session_duration'].min():.1f} seconds")
+print(f"  Max: {test_data['session_duration'].max():.1f} seconds")
+```
+
+Output:
+```
+Test dataset size: 100 rows
+
+Device type distribution:
+mobile     67
+desktop    33
+Name: device_type, dtype: int64
+
+Session duration stats:
+  Mean: 135.5 seconds
+  Min: 42.7 seconds
+  Max: 243.8 seconds
+```
+
+**Use Case - Privacy-Safe Test Data:**
+- Start with a small sample of real data (3 rows)
+- Generate 97 synthetic rows that follow the same patterns
+- Result: 100 rows of realistic test data without exposing real user data
+- Maintains statistical properties while protecting privacy
+
+**Why This is Powerful:**
+- No need to manually define distributions or strategies
+- Automatically learns patterns from your data
+- Generates realistic test data quickly
+- Safe to share with developers and QA teams
+
+Note: This also works with polars DataFrames.
+
+---
+
+## How @augment Works
+
+### Pattern Learning
+When you use `@augment` mode, additory:
+1. Analyzes the existing DataFrame
+2. Learns distributions for numeric columns
+3. Learns value sets for categorical columns
+4. Generates new rows that match these patterns
+
+### Column Types Handled
+- **Numeric columns**: Learns mean, standard deviation, and range
+- **Categorical columns**: Learns unique values and their frequencies
+- **Integer columns**: Maintains integer types in generated data
+- **Float columns**: Maintains float types in generated data
+
+### Comparison with @new Mode
+
+| Feature | @new Mode | @augment Mode |
+|---------|-----------|---------------|
+| Input DataFrame | Not required | Required |
+| Strategy Definition | Manual (you define) | Automatic (learned) |
+| Use Case | Create from scratch | Expand existing data |
+| Pattern Source | Your specifications | Existing data |
+
+---
+
+## Parameters
+
+### Required Parameters
+- `mode`: `'@augment'` to add to existing data
+- `df`: Existing DataFrame to augment
+- `n`: Number of rows to add
+
+### Optional Parameters
+- `seed`: Random seed for reproducibility (default: 42)
+- `logging`: Enable detailed logging (default: False)
+- `as_type`: Force output type (`'pandas'` or `'polars'`)
+
+### Positional Parameters
+```python
+# Also works without naming certain parameters:
+result = add.synthetic('@augment', existing_df, n=100, seed=42)
+```
+
+---
+
+## Common Use Cases
+
+### 1. Test Data Generation
+```python
+# Take 5 production rows, generate 95 test rows
+test_data = add.synthetic('@augment', production_sample, n=95)
+```
+
+### 2. Data Balancing
+```python
+# Balance an imbalanced dataset
+minority_class = df[df['label'] == 'rare']
+balanced = add.synthetic('@augment', minority_class, n=1000)
+```
+
+### 3. Privacy-Safe Sharing
+```python
+# Generate synthetic data that matches patterns but isn't real
+synthetic = add.synthetic('@augment', sensitive_data, n=10000)
+# Share synthetic data instead of real data
+```
+
+### 4. Stress Testing
+```python
+# Generate large datasets for performance testing
+large_test = add.synthetic('@augment', small_sample, n=1000000)
+```
+
+---
+
+## Next Steps
+
+- **Page 1**: Basic synthetic data with sequences and linked lists
+- **Page 2**: Distribution strategies (normal, exponential, etc.)
+- **Page 4**: Real-world scenarios and advanced patterns

@@ -1,0 +1,49 @@
+[power_electrical]
+expression = "voltage * current"
+description = "Electrical power calculation"
+category = "engineering"
+
+[resistance]
+expression = "voltage / current"
+description = "Electrical resistance (Ohms law)"
+category = "engineering"
+
+[current]
+expression = "voltage / resistance"
+description = "Electrical current (Ohms law)"
+category = "engineering"
+
+[efficiency_pct]
+expression = "(output_power / input_power) * 100"
+description = "Efficiency percentage"
+category = "engineering"
+
+[stress]
+expression = "force / area"
+description = "Stress in material"
+category = "engineering"
+
+[strain]
+expression = "change_in_length / original_length"
+description = "Strain in material"
+category = "engineering"
+
+[youngs_modulus]
+expression = "stress / strain"
+description = "Youngs modulus (material stiffness)"
+category = "engineering"
+
+[flow_rate_volume]
+expression = "area * velocity"
+description = "Volumetric flow rate"
+category = "engineering"
+
+[reynolds_number]
+expression = "density * velocity * diameter / viscosity"
+description = "Reynolds number (fluid flow)"
+category = "engineering"
+
+[capacitance]
+expression = "charge / voltage"
+description = "Electrical capacitance"
+category = "engineering"

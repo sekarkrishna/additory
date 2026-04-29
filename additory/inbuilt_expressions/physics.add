@@ -1,0 +1,54 @@
+[velocity]
+expression = "distance / time"
+description = "Velocity calculation - distance over time"
+category = "physics"
+
+[acceleration]
+expression = "(final_velocity - initial_velocity) / time"
+description = "Acceleration calculation"
+category = "physics"
+
+[force]
+expression = "mass * acceleration"
+description = "Force calculation (Newtons second law)"
+category = "physics"
+
+[kinetic_energy]
+expression = "0.5 * mass * (velocity ** 2)"
+description = "Kinetic energy calculation"
+category = "physics"
+
+[potential_energy]
+expression = "mass * 9.81 * height"
+description = "Gravitational potential energy (g = 9.81 m/s2)"
+category = "physics"
+
+[work]
+expression = "force * distance"
+description = "Work calculation"
+category = "physics"
+
+[momentum]
+expression = "mass * velocity"
+description = "Momentum calculation"
+category = "physics"
+
+[pressure]
+expression = "force / area"
+description = "Pressure calculation"
+category = "physics"
+
+[density]
+expression = "mass / volume"
+description = "Density calculation"
+category = "physics"
+
+[frequency]
+expression = "1 / period"
+description = "Frequency from period"
+category = "physics"
+
+[wavelength]
+expression = "speed / frequency"
+description = "Wavelength calculation"
+category = "physics"

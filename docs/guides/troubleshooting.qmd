@@ -1,0 +1,564 @@
+# Troubleshooting Guide
+
+A comprehensive reference for common errors, solutions, and best practices when using Additory.
+
+---
+
+## Quick Error Reference
+
+| Error Type | Common Cause | Quick Fix |
+|------------|--------------|-----------|
+| `TypeError: DataFrame must be pandas or polars` | Wrong input type | Pass pandas or polars DataFrame |
+| `ValueError: Column 'X' not found` | Missing column | Check column names with `df.columns` |
+| `ImportError: Rust bindings not available` | Missing Rust extension | Install with `pip install additory[rust]` |
+| `ValueError: Cannot use 'as_type' with 'lineage=True'` | Conflicting parameters | Use either `lineage=True` OR `as_type`, not both |
+| `RuntimeError: Transform failed` | Invalid mode or parameters | Check mode name has `@` prefix |
+| `KeyError: 'column_name'` | Column doesn't exist | Verify column exists in DataFrame |
+
+---
+
+## Common Errors by Function
+
+### add.to() Errors
+
+#### Error: "Column 'X' not found in reference DataFrame"
+
+**Cause**: The column specified in `bring` doesn't exist in `bring_from` DataFrame.
+
+**Solution**:
+```python
+# ❌ Wrong - 'age' doesn't exist in customers
+result = add.to(orders, bring_from=customers, bring='age', against='customer_id')
+
+# ✅ Correct - check available columns first
+print(customers.columns)  # ['customer_id', 'name', 'email']
+result = add.to(orders, bring_from=customers, bring='name', against='customer_id')
+```
+
+#### Error: "Key column 'X' not found"
+
+**Cause**: The column specified in `against` doesn't exist in one or both DataFrames.
+
+**Solution**:
+```python
+# ❌ Wrong - 'id' doesn't exist in orders
+result = add.to(orders, bring_from=customers, bring='name', against='id')
+
+# ✅ Correct - use the actual key column name
+result = add.to(orders, bring_from=customers, bring='name', against='customer_id')
+```
+
+#### Error: "All reference DataFrames must be the same type"
+
+**Cause**: Mixing pandas and polars DataFrames in list for `bring_from`.
+
+**Solution**:
+```python
+# ❌ Wrong - mixing pandas and polars
+orders_jan = pd.DataFrame(...)  # pandas
+orders_feb = pl.DataFrame(...)  # polars
+result = add.to(customers, bring_from=[orders_jan, orders_feb], ...)
+
+# ✅ Correct - use same type for all
+orders_jan = pd.DataFrame(...)  # pandas
+orders_feb = pd.DataFrame(...)  # pandas
+result = add.to(customers, bring_from=[orders_jan, orders_feb], ...)
+```
+
+#### Error: "strategy parameter must be a dict"
+
+**Cause**: Passing string instead of dict for aggregation strategy.
+
+**Solution**:
+```python
+# ❌ Wrong - strategy is a string
+result = add.to(customers, bring_from=orders, bring='amount', 
+                against='customer_id', strategy='sum')
+
+# ✅ Correct - strategy is a dict
+result = add.to(customers, bring_from=orders, bring='amount', 
+                against='customer_id', strategy={'amount': 'sum'})
+```
+
+---
+
+### add.transform() Errors
+
+#### Error: "Mode '@calc' requires 'expression' parameter"
+
+**Cause**: Missing required `expression` parameter for calculation mode.
+
+**Solution**:
+```python
+# ❌ Wrong - missing expression
+result = add.transform('@calc', df, columns=['price', 'quantity'], as_='total')
+
+# ✅ Correct - include expression
+result = add.transform('@calc', df, columns=['price', 'quantity'], 
+                       expression='price * quantity', as_='total')
+```
+
+#### Error: "Mode '@filter' requires 'where' parameter"
+
+**Cause**: Missing required `where` parameter for filter mode.
+
+**Solution**:
+```python
+# ❌ Wrong - missing where condition
+result = add.transform('@filter', df, columns=['price', 'stock'])
+
+# ✅ Correct - include where condition
+result = add.transform('@filter', df, columns=['price', 'stock'], where='stock > 0')
+```
+
+#### Error: "Mode '@aggregate' requires 'by' parameter"
+
+**Cause**: Missing required `by` parameter for aggregation mode.
+
+**Solution**:
+```python
+# ❌ Wrong - missing by parameter
+result = add.transform('@aggregate', df, columns=['region', 'sales'], 
+                       strategy={'sales': 'sum'})
+
+# ✅ Correct - include by parameter
+result = add.transform('@aggregate', df, columns=['region', 'sales'], 
+                       by='region', strategy={'sales': 'sum'})
+```
+
+#### Error: "Invalid mode 'calc' - did you mean '@calc'?"
+
+**Cause**: Missing `@` prefix on mode name.
+
+**Solution**:
+```python
+# ❌ Wrong - missing @ prefix
+result = add.transform('calc', df, expression='price * 2', as_='doubled')
+
+# ✅ Correct - include @ prefix
+result = add.transform('@calc', df, expression='price * 2', as_='doubled')
+```
+
+#### Error: "Number of expressions must match number of output names"
+
+**Cause**: Mismatch between number of expressions and `as_` names.
+
+**Solution**:
+```python
+# ❌ Wrong - 2 expressions but 1 output name
+result = add.transform('@calc', df, 
+                       expression=['price * quantity', 'price - cost'],
+                       as_='total')
+
+# ✅ Correct - matching counts
+result = add.transform('@calc', df, 
+                       expression=['price * quantity', 'price - cost'],
+                       as_=['total', 'profit'])
+```
+
+---
+
+### add.synthetic() Errors
+
+#### Error: "Mode '@new' requires 'n' parameter"
+
+**Cause**: Missing required `n` parameter for creating new DataFrame.
+
+**Solution**:
+```python
+# ❌ Wrong - missing n parameter
+result = add.synthetic('@new', strategy={'id': {'type': 'sequence'}})
+
+# ✅ Correct - include n parameter
+result = add.synthetic('@new', n=100, strategy={'id': {'type': 'sequence'}})
+```
+
+#### Error: "Mode '@augment' requires 'df' parameter"
+
+**Cause**: Missing required `df` parameter for augmenting existing DataFrame.
+
+**Solution**:
+```python
+# ❌ Wrong - missing df parameter
+result = add.synthetic('@augment', n=50, strategy={'age': {'distribution': 'normal'}})
+
+# ✅ Correct - include df parameter
+result = add.synthetic('@augment', df=existing_df, n=50, 
+                       strategy={'age': {'distribution': 'normal'}})
+```
+
+#### Error: "Invalid distribution 'gaussian' - did you mean 'normal'?"
+
+**Cause**: Using incorrect distribution name.
+
+**Solution**:
+```python
+# ❌ Wrong - 'gaussian' is not a valid distribution name
+result = add.synthetic('@new', n=100, 
+                       strategy={'age': {'distribution': 'gaussian'}})
+
+# ✅ Correct - use 'normal' for Gaussian distribution
+result = add.synthetic('@new', n=100, 
+                       strategy={'age': {'distribution': 'normal', 'mean': 35, 'std': 8}})
+```
+
+**Valid distributions**: `normal`, `lognormal`, `uniform`, `exponential`, `poisson`, `binomial`, `beta`
+
+#### Error: "LinkedList requires 'levels' parameter"
+
+**Cause**: Missing required `levels` parameter for linked list strategy.
+
+**Solution**:
+```python
+# ❌ Wrong - missing levels
+result = add.synthetic('@new', n=10, 
+                       strategy={'location': {'type': 'linked_list'}})
+
+# ✅ Correct - include levels
+result = add.synthetic('@new', n=10, 
+                       strategy={'location': {
+                           'type': 'linked_list',
+                           'levels': [
+                               ['USA', 'Canada', 'Mexico'],
+                               ['NY', 'Toronto', 'CDMX']
+                           ]
+                       }})
+```
+
+---
+
+### add.scan() Errors
+
+#### Error: "Mode '@lineage' requires lineage=True in previous operations"
+
+**Cause**: Trying to scan lineage on DataFrame that wasn't created with `lineage=True`.
+
+**Solution**:
+```python
+# ❌ Wrong - no lineage tracking enabled
+df = pd.DataFrame({'a': [1, 2, 3]})
+result = add.transform('@calc', df, expression='a * 2', as_='b')
+lineage = add.scan('@lineage', result)  # Error!
+
+# ✅ Correct - enable lineage tracking
+df = pd.DataFrame({'a': [1, 2, 3]})
+result = add.transform('@calc', df, expression='a * 2', as_='b', lineage=True)
+lineage = add.scan('@lineage', result)  # Works!
+```
+
+#### Error: "Invalid mode 'analyze' - did you mean '@analyze'?"
+
+**Cause**: Missing `@` prefix on mode name.
+
+**Solution**:
+```python
+# ❌ Wrong - missing @ prefix
+result = add.scan('analyze', df)
+
+# ✅ Correct - include @ prefix
+result = add.scan('@analyze', df)
+```
+
+---
+
+## Parameter Validation Errors
+
+### Error: "Cannot use 'as_type' with 'lineage=True'"
+
+**Cause**: Trying to use both `lineage=True` and `as_type` together.
+
+**Explanation**: Lineage metadata is stored in the DataFrame's native format and would be lost during type conversion.
+
+**Solution**:
+```python
+# ❌ Wrong - using both lineage and as_type
+result = add.to(orders, bring_from=customers, bring='name', 
+                against='customer_id', lineage=True, as_type='polars')
+
+# ✅ Option 1: Track lineage (returns same type as input)
+result = add.to(orders, bring_from=customers, bring='name', 
+                against='customer_id', lineage=True)
+
+# ✅ Option 2: Convert type (no lineage tracking)
+result = add.to(orders, bring_from=customers, bring='name', 
+                against='customer_id', as_type='polars')
+
+# ✅ Option 3: Convert after tracking lineage (lineage will be lost)
+result = add.to(orders, bring_from=customers, bring='name', 
+                against='customer_id', lineage=True)
+result_polars = pl.from_pandas(result)  # Convert separately
+```
+
+---
+
+## Data Type Errors
+
+### Error: "TypeError: DataFrame must be pandas or polars"
+
+**Cause**: Passing wrong type (dict, list, numpy array, etc.) instead of DataFrame.
+
+**Solution**:
+```python
+# ❌ Wrong - passing dict
+data = {'a': [1, 2, 3], 'b': [4, 5, 6]}
+result = add.transform('@calc', data, expression='a + b', as_='c')
+
+# ✅ Correct - convert to DataFrame first
+import pandas as pd
+df = pd.DataFrame(data)
+result = add.transform('@calc', df, expression='a + b', as_='c')
+```
+
+### Error: "Column 'X' has incompatible type for operation"
+
+**Cause**: Trying to perform numeric operations on string columns or vice versa.
+
+**Solution**:
+```python
+# ❌ Wrong - trying to multiply string column
+df = pd.DataFrame({'product': ['A', 'B'], 'quantity': [10, 20]})
+result = add.transform('@calc', df, expression='product * 2', as_='doubled')
+
+# ✅ Correct - use numeric columns for math operations
+result = add.transform('@calc', df, expression='quantity * 2', as_='doubled')
+```
+
+---
+
+## Empty DataFrame Errors
+
+### Error: "Cannot perform operation on empty DataFrame"
+
+**Cause**: Trying to transform or analyze DataFrame with 0 rows.
+
+**Solution**:
+```python
+# ❌ Wrong - operating on empty DataFrame
+df = pd.DataFrame({'a': [], 'b': []})
+result = add.transform('@calc', df, expression='a + b', as_='c')
+
+# ✅ Correct - check for empty DataFrame first
+if len(df) > 0:
+    result = add.transform('@calc', df, expression='a + b', as_='c')
+else:
+    print("DataFrame is empty, skipping transformation")
+    result = df
+```
+
+---
+
+## Missing Value Errors
+
+### Error: "Cannot aggregate column with all null values"
+
+**Cause**: Trying to aggregate a column that contains only null/None values.
+
+**Solution**:
+```python
+# ❌ Wrong - column has all nulls
+df = pd.DataFrame({'region': ['A', 'A', 'B'], 'sales': [None, None, None]})
+result = add.transform('@aggregate', df, columns=['region', 'sales'], 
+                       by='region', strategy={'sales': 'sum'})
+
+# ✅ Correct - handle nulls first
+df = pd.DataFrame({'region': ['A', 'A', 'B'], 'sales': [None, None, None]})
+# Fill nulls with 0 or use @deduce mode
+df['sales'] = df['sales'].fillna(0)
+result = add.transform('@aggregate', df, columns=['region', 'sales'], 
+                       by='region', strategy={'sales': 'sum'})
+```
+
+---
+
+## Best Practices
+
+### 1. Always Check Column Names
+
+```python
+# Before using columns, verify they exist
+print(df.columns)
+print(df.dtypes)  # Also check data types
+```
+
+### 2. Use Consistent DataFrame Types
+
+```python
+# Don't mix pandas and polars in the same operation
+# Pick one and stick with it for related operations
+```
+
+### 3. Enable Logging for Debugging
+
+```python
+# Enable logging to see detailed operation information
+result = add.to(orders, bring_from=customers, bring='name', 
+                against='customer_id', logging=True)
+```
+
+### 4. Validate Data Before Operations
+
+```python
+# Check for empty DataFrames
+if len(df) == 0:
+    print("Warning: DataFrame is empty")
+
+# Check for required columns
+required_cols = ['price', 'quantity']
+missing_cols = [col for col in required_cols if col not in df.columns]
+if missing_cols:
+    print(f"Missing columns: {missing_cols}")
+
+# Check for null values
+null_counts = df.isnull().sum()
+if null_counts.any():
+    print(f"Null values found:\n{null_counts[null_counts > 0]}")
+```
+
+### 5. Use Explicit Parameter Names
+
+```python
+# ✅ Good - clear and explicit
+result = add.to(
+    bring_to=orders,
+    bring_from=customers,
+    bring='name',
+    against='customer_id'
+)
+
+# ❌ Avoid - positional parameters can be confusing
+result = add.to(orders, customers, 'name', 'customer_id')
+```
+
+### 6. Handle Errors Gracefully
+
+```python
+# Wrap operations in try-except for production code
+try:
+    result = add.transform('@calc', df, expression='price * quantity', as_='total')
+except ValueError as e:
+    print(f"Validation error: {e}")
+    # Handle error appropriately
+except RuntimeError as e:
+    print(f"Operation failed: {e}")
+    # Handle error appropriately
+```
+
+### 7. Test with Small Data First
+
+```python
+# Test operations on a small sample before running on full dataset
+sample_df = df.head(10)
+result = add.transform('@calc', sample_df, expression='price * quantity', as_='total')
+# If successful, run on full dataset
+result = add.transform('@calc', df, expression='price * quantity', as_='total')
+```
+
+---
+
+## Debugging Checklist
+
+When you encounter an error, check these items in order:
+
+1. **Mode name**: Does it have the `@` prefix? (`@calc`, not `calc`)
+2. **Column names**: Do all referenced columns exist in the DataFrame?
+3. **Data types**: Are you using numeric columns for math operations?
+4. **Required parameters**: Does the mode have all required parameters?
+5. **Parameter types**: Are parameters the correct type (dict, list, string)?
+6. **DataFrame type**: Is it pandas or polars (not dict, list, etc.)?
+7. **Empty data**: Does the DataFrame have at least one row?
+8. **Null values**: Are there unexpected null values in key columns?
+9. **Conflicting parameters**: Are you using `lineage=True` with `as_type`?
+10. **Rust bindings**: Is the Rust extension installed for Rust-based modes?
+
+---
+
+## Getting Help
+
+If you're still stuck after checking this guide:
+
+1. **Check the error message carefully** - It often contains the solution
+2. **Enable logging** - Use `logging=True` to see detailed operation info
+3. **Simplify the operation** - Try with minimal parameters first
+4. **Check the examples** - Review the documentation examples for similar use cases
+5. **Verify installation** - Ensure Rust bindings are installed: `pip install additory[rust]`
+
+---
+
+## Common Patterns That Work
+
+### Pattern 1: Multi-Step Pipeline
+
+```python
+# Build pipelines step by step, checking results at each stage
+df = pd.DataFrame(...)
+
+# Step 1: Calculate
+result = add.transform('@calc', df, expression='price * quantity', as_='total')
+print(f"After calc: {result.shape}")
+
+# Step 2: Filter
+result = add.transform('@filter', result, where='total > 100')
+print(f"After filter: {result.shape}")
+
+# Step 3: Aggregate
+result = add.transform('@aggregate', result, by='region', 
+                       strategy={'total': 'sum'})
+print(f"After aggregate: {result.shape}")
+```
+
+### Pattern 2: Safe Column Access
+
+```python
+# Always verify columns exist before using them
+def safe_transform(df, expression, as_name):
+    # Extract column names from expression (simplified)
+    required_cols = ['price', 'quantity']  # Columns used in expression
+    
+    missing = [col for col in required_cols if col not in df.columns]
+    if missing:
+        raise ValueError(f"Missing required columns: {missing}")
+    
+    return add.transform('@calc', df, expression=expression, as_=as_name)
+
+# Use the safe wrapper
+result = safe_transform(df, 'price * quantity', 'total')
+```
+
+### Pattern 3: Type-Safe Operations
+
+```python
+# Ensure consistent types throughout pipeline
+import pandas as pd
+
+# Start with pandas
+df = pd.DataFrame(...)
+
+# All operations return pandas (no as_type conversion)
+result = add.to(df, bring_from=ref_df, bring='name', against='id')
+result = add.transform('@calc', result, expression='price * 2', as_='doubled')
+result = add.transform('@filter', result, where='doubled > 100')
+
+# Final result is pandas
+assert isinstance(result, pd.DataFrame)
+```
+
+---
+
+## Error Message Glossary
+
+| Error Message | Meaning | Action |
+|---------------|---------|--------|
+| "Column 'X' not found" | Column doesn't exist | Check `df.columns` |
+| "Mode 'X' not recognized" | Invalid mode name | Add `@` prefix or check spelling |
+| "Parameter 'X' is required" | Missing required parameter | Add the parameter |
+| "Type mismatch" | Wrong data type | Convert to correct type |
+| "Empty DataFrame" | No rows in DataFrame | Check data source |
+| "Rust bindings not available" | Extension not installed | Run `pip install additory[rust]` |
+| "Cannot convert" | Type conversion failed | Check data compatibility |
+| "Invalid strategy" | Wrong strategy format | Use dict format: `{'col': 'agg'}` |
+| "Conflicting parameters" | Incompatible parameters used together | Remove one parameter |
+| "Operation failed" | Generic operation error | Check all parameters and data |
+
+---
+
+**Note**: This guide covers the most common errors. For function-specific details, refer to the individual function documentation pages.
