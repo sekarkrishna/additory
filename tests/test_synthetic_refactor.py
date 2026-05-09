@@ -230,7 +230,7 @@ class TestSyntheticPipeEquivalence:
         direct = add.synthetic(df, n=5, seed=42)
         piped = df.pipe(add.synthetic, n=5, seed=42)
 
-        assert direct.frame_equal(piped), (
+        assert direct.equals(piped), (
             "Pipe call and direct call produced different results"
         )
 

@@ -678,6 +678,7 @@ fn _additory(_py: Python, m: &PyModule) -> PyResult<()> {
                 match mode {
                     ScanMode::Analyze => OutputFormat::DataFrame,
                     ScanMode::Lineage => OutputFormat::Text,
+                    ScanMode::Set => OutputFormat::Text, // unreachable: handled in Python
                 }
             }
             Some(other) => {

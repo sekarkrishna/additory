@@ -78,7 +78,7 @@ class TestToPipeEquivalence:
         direct = add.to(df, bring_from=ref, bring=["age"], against="id")
         piped = df.pipe(add.to, bring_from=ref, bring=["age"], against="id")
 
-        assert direct.frame_equal(piped), (
+        assert direct.equals(piped), (
             "Pipe call and direct call produced different results"
         )
 
